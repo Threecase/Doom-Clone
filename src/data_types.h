@@ -138,9 +138,10 @@ typedef struct BSP_Node {
     int dx, dy;
     int l_bbox[4];
     int r_bbox[4];
-    struct BSP_Node *r_child;
-    struct BSP_Node *l_child;
-    SSector *ssectors;
+    struct BSP_Node *pos;
+    struct BSP_Node *neg;
+    SSector **ssectors;
+    int length;
 } BSP_Node;
 
 

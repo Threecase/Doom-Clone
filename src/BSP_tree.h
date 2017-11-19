@@ -10,10 +10,12 @@
 
 #include <stdlib.h>
 
+#include "data_types.h"
 
-void create_BSP (BSP_Tree *N, Polygon **polys, int num_polys);
 
-void traverse (BSP_Tree N, Viewpoint V);
+void create_BSP (BSP_Node *N, SSector **polys, int num_polys);
+
+void traverse (BSP_Node N, Thing V);
 
 
 #endif

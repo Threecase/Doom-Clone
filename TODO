@@ -1,6 +1,6 @@
 
-add function for testing if a poly is in front or behind the other
+rendering, etc.
 
-add function for render
+ssector position comparison (ie in front, behind, etc.)
 
-add function for splitting a poly (+ adding it to the list?)
+WAD reading

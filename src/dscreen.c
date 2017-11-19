@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#include "DScreen.h"
+#include "dscreen.h"
 
 
 
@@ -13,9 +13,8 @@
     if they are available in the scanline */
 void render_line (char *pixels_to_draw, Scanline scanline) {
 
-    for (int i = 0; pixels_to_draw[i] != NULL; ++i)
+    for (int i = 0; pixels_to_draw+i != NULL; ++i)
         if (is_available (scanline.pixels[i]))
             draw_pixel (scanline.pixels[i], pixels_to_draw[i]);
-
 }
 

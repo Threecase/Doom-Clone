@@ -6,12 +6,12 @@
 
 #include <stdio.h>
 
-#include "BSP_Tree.h"
+#include "BSP_tree.h"
 
 
 
 /* add_to_list: Adds E to list L, resizing it if needed */
-int add_to_list (Polygon **L, int *len, Polygon *E) {
+int add_to_list (SSector **L, int *len, SSector *E) {
     int i;
     for (i = 0; i < *len; ++i)
         if (&L[i] == NULL) {
@@ -29,20 +29,20 @@ int add_to_list (Polygon **L, int *len, Polygon *E) {
 
 /* split_poly_add: split the polygon,
     then add the pieces to the list */
-void split_poly_add (Polygon *p, Polygon **list) {
+void split_poly_add (SSector *p, SSector **list) {
 
     
 }
 
 
 /* create_BSP: Create a BSP tree */
-void create_BSP (BSP_Tree *N, Polygon **polys, int num_polys) {
+void create_BSP (BSP_Node *N, SSector **polys, int num_polys) {
 
     N->pos = N->neg = NULL;
 
     // select random subsector as starting point
-    Polygon *P = polys[rand() % num_polys];
-    add_to_list (N->polygons, &N->num_polys, P);
+    SSector *P = polys[rand() % num_polys];
+    add_to_list (N->ssectors, &N->length, P);
 
     // apply the algorithm
     for (int i = 0; i < num_polys; ++i) {
@@ -52,23 +52,23 @@ void create_BSP (BSP_Tree *N, Polygon **polys, int num_polys) {
         // poly is in front of P
         else if (in_front (P, polys[i])) {
             if (N->pos == NULL)
-                N->pos = calloc (1, sizeof(BSP_Tree));
-            add_to_list (N->pos->polygons, &N->pos->num_polys, polys[i]);
+                N->pos = calloc (1, sizeof(BSP_Node));
+            add_to_list (N->pos->ssectors, &N->pos->length, polys[i]);
         }
         // poly is behind P
         else if (behind (P, polys[i])) {
             if (N->neg == NULL)
-                N->neg = calloc (1, sizeof(BSP_Tree));
-            add_to_list (N->neg->polygons, &N->pos->num_polys, polys[i]);
+                N->neg = calloc (1, sizeof(BSP_Node));
+            add_to_list (N->neg->ssectors, &N->pos->length, polys[i]);
         }
         // poly intersects P
         else if (intersect (P, polys[i])) {
-            split_poly_add (polys[i], N->polygons);
+            split_poly_add (polys[i], N->ssectors);
             num_polys += 2;
         }
         // poly is in same plane as P
         else
-            add_to_list (N->polygons, &N->num_polys, polys[i]);
+            add_to_list (N->ssectors, &N->length, polys[i]);
     }
     create_BSP (N->pos, polys, num_polys);
     create_BSP (N->neg, polys, num_polys);
@@ -76,7 +76,7 @@ void create_BSP (BSP_Tree *N, Polygon **polys, int num_polys) {
 
 
 /* traverse: Traverse the BSP tree N */
-void traverse (BSP_Tree N, Viewpoint V) {
+void traverse (BSP_Node N, Thing V) {
 
     // node is a leaf, render it
     if (N.neg == NULL && N.pos == NULL)
