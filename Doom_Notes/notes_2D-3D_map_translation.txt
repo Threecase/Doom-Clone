@@ -1,0 +1,17 @@
+
+MAP
+---
++---------+
+|    ^    |
+|    |    |
+|    P    |
+|         |
+|         |
++---------+
+
+
+the z-axis can be found by the distance of the wall
+from the player (represented by the arrow).
+
+x is just the x coordinate from the map
+

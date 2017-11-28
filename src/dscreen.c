@@ -8,13 +8,12 @@
 #include "dscreen.h"
 
 
+/* dscreen_add_pixel: attempt to add a pixel to the dscreen */
+void dscreen_add_pixel (DScreen *scr, int x, int y, uint8_t pixel[3]) {
 
-/* render: draw the pixels in pixels_to_draw to the screen,
-    if they are available in the scanline */
-void render_line (char *pixels_to_draw, Scanline scanline) {
-
-    for (int i = 0; pixels_to_draw+i != NULL; ++i)
-        if (is_available (scanline.pixels[i]))
-            draw_pixel (scanline.pixels[i], pixels_to_draw[i]);
+    if (scr->pixels[x][y][0] == 0 && scr->pixels[x][y][1] == 0
+     && scr->pixels[x][y][2] == 0)
+        for (int i = 0; i < 3; ++i)
+            scr->pixels[x][y][i] = pixel[i];
 }
 

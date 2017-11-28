@@ -13,7 +13,7 @@
 #include "data_types.h"
 
 
-void create_BSP (BSP_Node *N, SSector **polys, int num_polys);
+void create_BSP (BSP_Node *N, Linedef **polys, int num_polys);
 
 void traverse (BSP_Node N, Thing V);
 

@@ -7,6 +7,10 @@
 #define _DATA_TYPES_H
 
 
+/* VERTEX:
+    most basic part of the map,
+    just two x/y coords.
+    */
 typedef struct {
     int x, y;
 } Vertex;
@@ -31,6 +35,7 @@ typedef enum {
     TF_sklvl_45   = 4,
     TF_deaf       = 8,
     TF_no_singlep = 16
+    // 32 - 256 unused
 } Thing_Flags;
 
 
@@ -45,7 +50,11 @@ typedef struct {
     char *floor_tex, *ceil_tex; // floor/ceiling texture
     char brightness;            // light level
     char type;                  // sector type
-    //char tag; ???
+    char tag;                   /*
+                                same as Linedef type, sectors
+                                with the same tag as the
+                                Linedef will be affected
+                                */
 } Sector;
 
 /* sector types */
@@ -86,7 +95,7 @@ typedef struct {
 typedef struct {
     Vertex *start, *end;    // start/end vertices
     short flags;            // flags
-    //short type; ???
+    short type;             // type (ie door, elevator, etc.)
     Sector *sector;         // sector lindef is in
     Sidedef sides[2];       // left/right sidedefs
 } Linedef;
@@ -114,8 +123,7 @@ typedef struct {
     Vertex *start, *end;// start/end vertices
     unsigned angle;     // angle of the line
     Linedef *line;      // linedef this is a seg of
-    char direction;     // left or right side of the linedef?
-    //int offset; ??? What is this for?
+    char direction;     // left(0) or right(1) side of the linedef?
 } Seg;
 
 
@@ -134,13 +142,9 @@ typedef struct {
     the nodes of the BSP Tree.
     */
 typedef struct BSP_Node {
-    int x, y;
-    int dx, dy;
-    int l_bbox[4];
-    int r_bbox[4];
+    Linedef **lines;
     struct BSP_Node *pos;
     struct BSP_Node *neg;
-    SSector **ssectors;
     int length;
 } BSP_Node;
 
