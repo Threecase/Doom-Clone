@@ -4,6 +4,7 @@
  *
  */
 
+// FIXME: TEMP
 #include <stdio.h>
 
 #include "BSP_tree.h"
@@ -18,7 +19,6 @@
 
 
 char test_line (Linedef L, int x, int y);
-
 
 
 /* add_to_list: Adds E to list L, resizing it if needed */
@@ -102,28 +102,26 @@ void create_BSP (BSP_Node *N, Linedef **polys, int num_polys) {
 }
 
 
-char test_line (Linedef L, int x, int y);
-
 /* traverse: Traverse the BSP tree N */
 void traverse (BSP_Node N, Thing V) {
 
     // node is a leaf, render it
     if (N.neg == NULL && N.pos == NULL)
-        render (N);
+        render_node (N);
 
     for (int i = 0; N.lines[i] != NULL; ++i)
         switch (test_line (*N.lines[i], V.x, V.y)) {
         // V is in front of N
         case IN_FRONT:
             traverse (*N.neg, V);
-            render (N);
+            render_node (N);
             traverse (*N.pos, V);
             break;
 
         // V is behind N
         case BEHIND:
             traverse (*N.pos, V);
-            render (N);
+            render_node (N);
             traverse (*N.neg, V);
             break;
 
@@ -135,6 +133,8 @@ void traverse (BSP_Node N, Thing V) {
         }
 }
 
+/* test_line: figure out where x/y are with respect to
+    line L (eg in front, behind, etc.) */
 char test_line (Linedef L, int x, int y) {
 
     int y0, m, b;

@@ -19,16 +19,18 @@
 #include "dscreen.h"
 #include "data_types.h"
 #include "3D_manipulations.h"
+#include "drawing_2.h"
+#include "error.h"
 
 
 struct Screen G_SCREEN;
 
 char G_VIDEO_INIT;
 
-int SCREEN_WIDTH, SCREEN_HEIGHT;
+unsigned SCREEN_WIDTH, SCREEN_HEIGHT;
 
 
-void render (BSP_Node node_to_render);
+void render_node (BSP_Node node_to_render);
 
 void draw_render();
 
