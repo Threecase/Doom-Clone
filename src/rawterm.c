@@ -5,6 +5,8 @@
 
 #include "rawterm.h"
 
+char term_israw = 0;
+
 
 
 /* term_error: error logging
@@ -24,7 +26,7 @@ int term_error (char *msg, int severity) {
     case 2:     // error
         raw_writes ("rawterm: Error - ");
         raw_writes (msg);
-        term_shutdown();
+        term_noraw();
         break;
     }
     return -1;
@@ -33,10 +35,11 @@ int term_error (char *msg, int severity) {
 /* term_raw: set the terminal to raw mode
     returns non-zero on failure, else 0*/
 int term_raw() {
-    
+
     extern struct termios def_term;
     struct termios raw_term;
     cfmakeraw (&raw_term);
+//    raw_term.c_lflag &= (~ICANON & ~ECHO);
 
 
     if (!isatty (STDIN_FILENO))
@@ -45,17 +48,20 @@ int term_raw() {
     if (tcgetattr (STDIN_FILENO, &def_term) < 0)
         return term_error ("Couldn't get tty settings!", 2);
 
-    if (atexit (term_shutdown) != 0)
-        return term_error ("Couldn't register term_shutdown atexit!", 2);
+    if (atexit (term_noraw) != 0)
+        return term_error ("Couldn't register term_noraw atexit!", 2);
 
     tcsetattr (STDIN_FILENO, TCSAFLUSH, &raw_term);
+
+    term_israw = 1;
 
     return 0;
 }
 
-/* term_shutdown: reset the terminal to buffered mode */
-void term_shutdown() {
+/* term_noraw: reset the terminal to buffered mode */
+void term_noraw() {
     tcsetattr (STDIN_FILENO, TCSAFLUSH, &def_term);
+    term_israw = 0;
 }
 
 /* raw_input: get input from the terminal */
@@ -63,6 +69,7 @@ int raw_input() {
 
     int bytes_read, c;
 
+    tcflush (STDIN_FILENO, TCIFLUSH);
     bytes_read = read (STDIN_FILENO, &c, 1);
 
     if (bytes_read <= 0)

@@ -21,7 +21,12 @@
 #include "3D_manipulations.h"
 #include "drawing_2.h"
 #include "error.h"
+#include "wad_info.h"
 
+
+// VARIABLES
+// FIXME temp
+int angle;
 
 struct Screen G_SCREEN;
 
@@ -30,7 +35,8 @@ char G_VIDEO_INIT;
 unsigned SCREEN_WIDTH, SCREEN_HEIGHT;
 
 
-void render_node (BSP_Node node_to_render);
+// FUNCTIONS
+void render_ssector (SSector ssec, Point camera);
 
 void draw_render();
 

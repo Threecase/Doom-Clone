@@ -6,15 +6,15 @@
 #include "read_wad.h"
 
 
-int numlumps = 0;
-Lumpinfo *lumps;
+int NUM_LUMPS = 0;
+Lumpinfo *LUMPS = NULL;
 
 
 /* read_WAD: read a WAD file */
 void read_WAD (char *wadname) {
 
     Wadinfo wadheader;
-    Filelump *raw_lumps;
+    Filelump *raw_lumps = NULL;
     int wad_fd;
     int startlumps, length;
 
@@ -22,36 +22,45 @@ void read_WAD (char *wadname) {
         fatal_error ("Could not open file '%s'", wadname);
 
 
+    startlumps = NUM_LUMPS;
+
     read (wad_fd, &wadheader, 12);
 
     if (strncasecmp (wadheader.id, "iwad", 4))
         if (strncasecmp (wadheader.id, "pwad", 4))
             fatal_error ("'%s' is neither an IWAD nor PWAD!", wadname);
 
+    wadheader.numlumps = LONG (wadheader.numlumps);
+    wadheader.start_lumps = LONG (wadheader.start_lumps);
 
-    numlumps = wadheader.numlumps;
+    NUM_LUMPS = wadheader.numlumps;
 
-    lumps = realloc (lumps, numlumps * sizeof(Lumpinfo));
+    LUMPS = realloc (LUMPS, NUM_LUMPS * sizeof(Lumpinfo));
+    if (LUMPS == NULL)
+        fatal_error ("LUMPS realloc failed!");
 
     length = wadheader.numlumps * sizeof(Filelump);
     raw_lumps = alloca (length);
+    if (raw_lumps == NULL)
+        fatal_error ("raw_lumps alloc failed!");
     lseek (wad_fd, wadheader.start_lumps, SEEK_SET);
     read (wad_fd, raw_lumps, length);
 
-    for (int i = startlumps; i < numlumps; ++i, ++raw_lumps) {
-        strncpy (lumps[i].name, raw_lumps->name, 8);
-        lumps[i].position = raw_lumps->lumpstart;
-        lumps[i].size = raw_lumps->size;
-        lumps[i].fd = wad_fd;
+    for (int i = startlumps; i < NUM_LUMPS; ++i, ++raw_lumps) {
+        strncpy (LUMPS[i].name, raw_lumps->name, 8);
+        LUMPS[i].position = LONG (raw_lumps->lumpstart);
+        LUMPS[i].size = LONG (raw_lumps->size);
+        LUMPS[i].fd = wad_fd;
     }
 }
 
 /* get_lump_index: return index of a lump */
 int get_lump_index (char *lump_name) {
 
-    for (int i = numlumps; i > 0; --i)
-        if (!strncasecmp (lumps[i].name, lump_name, 8))
+    for (int i = NUM_LUMPS-1; i > 0; --i) {
+        if (!strncasecmp (LUMPS[i].name, lump_name, strnlen (lump_name, 8)))
             return i;
+    }
     return -1;  // error: lump not found
 }
 
@@ -59,27 +68,26 @@ int get_lump_index (char *lump_name) {
     (in bytes) of the lump*/
 int get_lump_size (int lump) {
 
-    if (lump > numlumps || lump < 0)
+    if (lump > NUM_LUMPS || lump < 0)
         fatal_error ("Lump %i out of range!", lump);
 
-    return lumps[lump].size;
+    return LUMPS[lump].size;
 }
 
 /*read_lump: read the data from the lump
     into output */
 void read_lump (int lump_index, void *output) {
 
-    if (lump_index > numlumps || lump_index < 0)
+    if (lump_index > NUM_LUMPS || lump_index < 0)
         fatal_error ("Lump %i is out of range!", lump_index);
 
     Lumpinfo lump;
-    int read_b;
+    int bytes_read;
 
-    lump = lumps[lump_index];
-
+    lump = LUMPS[lump_index];
     lseek (lump.fd, lump.position, SEEK_SET);
-    if ((read_b = read (lump.fd, output, lump.size) < lump.size))
+    if ((bytes_read = read (lump.fd, output, lump.size) < lump.size))
         fatal_error ("Only read %i bytes of lump '%s' (size %i)!",
-            read_b, lump.name, lump.size);
+            bytes_read, lump.name, lump.size);
 }
 

@@ -20,56 +20,82 @@ static inline uint32_t pixel_colour (uint8_t r, uint8_t g, uint8_t b,
     draw and clear the dscreen */
 void draw_render() {
 
-    for (int y = 0; y < G_SCREEN.dscr->height; ++y) {
+    for (int y = 0; y < G_SCREEN.dscr->height; ++y)
         for (int x = 0; x < G_SCREEN.dscr->width; ++x) {
             draw_pixel (G_SCREEN.dscr->pixels[x][y], x, y);
+            G_SCREEN.dscr->pixels[x][y][0] = 0;
+            G_SCREEN.dscr->pixels[x][y][1] = 0;
+            G_SCREEN.dscr->pixels[x][y][2] = 0;
         }
-    }
+    for (int x = 0; x < G_SCREEN.dscr->height; ++x)
+        memset (G_SCREEN.dscr->pixels[x], 0, G_SCREEN.dscr->width);
 }
 
-/* render_node: draw a wall (ie linedef) to the screen */
-void render_node (BSP_Node N) {
-
-    /* FIXME: TEMP CAMERA COORDS */
-    Point camera = { 0, 127, 256 };
+/* render_ssec: draw a subsector to the screen */
+void render_ssector (SSector ssec, Point camera) {
 
     Point pnt;
-    int outx, outy, ptd_i;
-    uint8_t col[3];
+    int outx, outy, seg_n, corner;
+    uint8_t col[ssec.num_segs][3];
 
-    long pixels_to_draw[N.length * 4][2];
+    long pixels_to_draw[ssec.num_segs][4][2];
 
     /* loop through lines in N, translate to 3D, and
         attempt to draw the polygon to the screen */
-    ptd_i = 0;
-    for (int i = 0; i < N.length; ++i) {
+    seg_n = 0;
+    for (int i = ssec.start_seg; i < ssec.start_seg + ssec.num_segs; ++i) {
+        corner = 0;
         for (int y = 0; y < 255; y += 254) {    // FIXME hardcoded y limit
 
             // start vertex
-            pnt.x = N.lines[i]->start->x;
+            pnt.x = VERT_LIST[SEG_LIST[i].start].x;
             pnt.y = y;
-            pnt.z = N.lines[i]->start->y;
-            coords_3D_to_2D (pnt, camera, 0, &outx, &outy);
-            // add to drawbuffer
-            pixels_to_draw[ptd_i][0] = (SCREEN_WIDTH/2) + outx;
-            pixels_to_draw[ptd_i++][1] = (SCREEN_HEIGHT/2) + outy;
+            pnt.z = VERT_LIST[SEG_LIST[i].start].z;
+            if (pnt.z < camera.z) {
+                coords_3D_to_2D (pnt, camera, angle, &outx, &outy);
+                if (&outx != NULL && &outy != NULL) {
+                    // add to drawbuffer
+                    pixels_to_draw[seg_n][corner][0] = (SCREEN_WIDTH/2) + outx;
+                    pixels_to_draw[seg_n][corner++][1] = (SCREEN_HEIGHT/2) + outy;
+                    col[seg_n][0] = col[seg_n][1] = col[seg_n][2] = pnt.z % 255;
+                }
+            }
+            else {
+                pixels_to_draw[seg_n][corner][0] = 0;
+                pixels_to_draw[seg_n][corner++][1] = 0;
+                pixels_to_draw[seg_n][corner][0] = 0;
+                pixels_to_draw[seg_n][corner++][1] = 0;
+                continue;
+            }
 
             // end vertex
-            pnt.x = N.lines[i]->end->x;
+            pnt.x = VERT_LIST[SEG_LIST[i].end].x;
             pnt.y = y;
-            pnt.z = N.lines[i]->end->y;
-            coords_3D_to_2D (pnt, camera, 0, &outx, &outy);
-            // add to drawbuffer
-            pixels_to_draw[ptd_i][0] = (SCREEN_WIDTH/2) + outx;
-            pixels_to_draw[ptd_i++][1] = (SCREEN_HEIGHT/2) + outy;
+            pnt.z = VERT_LIST[SEG_LIST[i].end].z;
+            if (pnt.z < camera.z) {
+                coords_3D_to_2D (pnt, camera, angle, &outx, &outy);
+                if (&outx == NULL || &outy == NULL)
+                    continue;
+                // add to drawbuffer
+                pixels_to_draw[seg_n][corner][0] = (SCREEN_WIDTH/2) + outx;
+                pixels_to_draw[seg_n][corner++][1] = (SCREEN_HEIGHT/2) + outy;
+                col[seg_n][0] = col[seg_n][1] = col[seg_n][2] = pnt.z % 255;
+            }
+            else {
+                pixels_to_draw[seg_n][corner-1][0] = 0;
+                pixels_to_draw[seg_n][corner-1][1] = 0;
+                pixels_to_draw[seg_n][corner][0] = 0;
+                pixels_to_draw[seg_n][corner++][1] = 0;
+                continue;
+            }
         }
+        seg_n++;
     }
-    col[0] = col[1] = col[2] = 255;
-    for (int i = 0; i < N.length * 4; ++i) {
-        dscreen_add_pixel (G_SCREEN.dscr, pixels_to_draw[i][0],
-                            pixels_to_draw[i][1], col);
+    for (int j = 0; j < ssec.num_segs; ++j) {
+        /*for (int i = 0; i < 4; ++i)
+            draw_pixel (col, pixels_to_draw[j][i][0], pixels_to_draw[j][i][1]);*/
+        fill_poly (pixels_to_draw[j], col[j]);
     }
-    fill_poly (pixels_to_draw, col);
 }
 
 /* draw_pixel: draw a pixel to the screen */
@@ -121,9 +147,8 @@ void init_video() {
     G_SCREEN.dscr = malloc (sizeof(DScreen));
     G_SCREEN.dscr->width = G_SCREEN.vinfo->xres;
     G_SCREEN.dscr->height = G_SCREEN.vinfo->yres;
-    G_SCREEN.dscr->pixels = calloc (
-                    G_SCREEN.dscr->width /* G_SCREEN.dscr->height*/,
-                    sizeof(uint8_t (*)[3]));
+    G_SCREEN.dscr->pixels = calloc (G_SCREEN.dscr->width,
+        sizeof(uint8_t (*)[3]));
     for (int i = 0; i < G_SCREEN.dscr->width; ++i)
         G_SCREEN.dscr->pixels[i] = calloc (G_SCREEN.dscr->height,
                                     sizeof(uint8_t (*)[3]));
@@ -135,7 +160,6 @@ void init_video() {
 
     extern char G_VIDEO_INIT;
     G_VIDEO_INIT = 1;
-    puts ("init done");
 }
 
 /* shutdown_video: cleanup graphics variables */

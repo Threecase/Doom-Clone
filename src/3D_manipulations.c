@@ -5,6 +5,9 @@
 
 #include "3D_manipulations.h"
 
+// FIXME : TEMP INCLUDE
+#include <stdio.h>
+
 
 
 /* rotate_on_axis: rotate x,y angle degrees around
@@ -20,16 +23,24 @@ void rotate_on_axis (int x, int y, int angle, int *newx, int *newy) {
     double rads = angle * M_PI / 180;
 
     *newx = (x * cos (rads)) - (y * sin (rads));
-    *newy = (y * cos (rads)) + (x * sin (rads));
+    *newy = (x * sin (rads)) + (y * cos (rads));
 }
 
 /* 3D_to_2D: translate 3D coordinates to 2D ones */
 void coords_3D_to_2D (Point A, Point C, int angle, int *x2D, int *y2D) {
 
     int ax, az;
-    rotate_on_axis (A.x, A.z, angle, &ax, &az);
+    rotate_on_axis (C.x - A.x, C.z - A.z, angle, &ax, &az);
+    int div = C.z + az;
+    if (div == 0) {
+//        puts ("coords_3D_to_2D: avoided divide by zero!");
+        // causes extreme lag
+        x2D = NULL;
+        y2D = NULL;
+        return;
+    }
 
-    *x2D = (FOV * (ax  - C.x)) / (C.z - az);
-    *y2D = (FOV * (A.y - C.y)) / (C.z - az);
+    *x2D = (FOV * (ax + C.x)) / div;
+    *y2D = (FOV * (A.y - C.y)) / div;
 }
 

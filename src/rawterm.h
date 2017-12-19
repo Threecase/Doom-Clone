@@ -18,7 +18,7 @@ struct termios def_term;
 
 int term_raw();
 
-void term_shutdown();
+void term_noraw();
 
 int raw_input();
 

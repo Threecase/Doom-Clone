@@ -4,11 +4,10 @@
  *
  */
 
-// FIXME: TEMP
+// FIXME: TEMP INCLUDE
 #include <stdio.h>
 
 #include "BSP_tree.h"
-#include "drawing.h"
 
 
 // return vals for direction returns
@@ -18,11 +17,11 @@
 #define INTERSECT   3
 
 
-char test_line (Linedef L, int x, int y);
+char test_line (Node n, int x, int y);
 
 
 /* add_to_list: Adds E to list L, resizing it if needed */
-int add_to_list (Linedef **L, int *len, Linedef *E) {
+/*int add_to_list (Linedef **L, int *len, Linedef *E) {
     int i;
     for (i = 0; i < *len; ++i)
         if (&L[i] == NULL) {
@@ -37,11 +36,12 @@ int add_to_list (Linedef **L, int *len, Linedef *E) {
     }
     return i;
 }
+*/
 
 /* poly_test_loc: Tests whether the polygon
     is in front, on the same plane as, behind,
     or intersecting the other polygon */
-char poly_test_loc (Linedef a, Linedef b) {
+/*char poly_test_loc (Linedef a, Linedef b) {
 
     char s1, s2;
 
@@ -54,16 +54,18 @@ char poly_test_loc (Linedef a, Linedef b) {
         return s1;
 
 }
+*/
 
 /* split_poly_add: split the polygon,
     then add the pieces to the list */
-void split_poly_add (Linedef *p, Linedef **list) {
+/*void split_poly_add (Linedef *p, Linedef **list) {
     // TODO
-}
+}*/
 
 
 /* create_BSP: Create a BSP tree */
-void create_BSP (BSP_Node *N, Linedef **polys, int num_polys) {
+/* NOT NEEDED
+void create_BSP (Node *N, Linedef **polys, int num_polys) {
 
     N->pos = N->neg = NULL;
 
@@ -80,13 +82,13 @@ void create_BSP (BSP_Node *N, Linedef **polys, int num_polys) {
         // poly is in front of P
         case IN_FRONT:
             if (N->pos == NULL)
-                N->pos = calloc (1, sizeof(BSP_Node));
+                N->pos = calloc (1, sizeof(Node));
             add_to_list (N->pos->lines, &N->pos->length, polys[i]);
             break;
         // poly is behind P
         case BEHIND:
             if (N->neg == NULL)
-                N->neg = calloc (1, sizeof(BSP_Node));
+                N->neg = calloc (1, sizeof(Node));
             add_to_list (N->neg->lines, &N->pos->length, polys[i]);
         // poly intersects P
         case INTERSECT:
@@ -100,63 +102,51 @@ void create_BSP (BSP_Node *N, Linedef **polys, int num_polys) {
     create_BSP (N->pos, polys, num_polys);
     create_BSP (N->neg, polys, num_polys);
 }
+*/
 
 
-/* traverse: Traverse the BSP tree N */
-void traverse (BSP_Node N, Thing V) {
+/* render_tree: Traverse the BSP tree */
+void render_tree (uint16_t n_num, Point view) {
 
-    // node is a leaf, render it
-    if (N.neg == NULL && N.pos == NULL)
-        render_node (N);
+    // N is a subsectot
+    if (n_num & IS_SSECTOR) {
+        if (n_num == -1)
+            n_num = 0;
+//        printf ("render %hi\n", n_num & (~IS_SSECTOR));
+        render_ssector (SSECTOR_LIST[n_num & (~IS_SSECTOR)], view);
+        return;
+    }
 
-    for (int i = 0; N.lines[i] != NULL; ++i)
-        switch (test_line (*N.lines[i], V.x, V.y)) {
-        // V is in front of N
-        case IN_FRONT:
-            traverse (*N.neg, V);
-            render_node (N);
-            traverse (*N.pos, V);
-            break;
+    Node bsp_node = (Node)NODE_LIST[n_num];
+//    printf ("%hi : %hi | %hi\n", n_num, bsp_node.child[1], bsp_node.child[0]);
 
-        // V is behind N
-        case BEHIND:
-            traverse (*N.pos, V);
-            render_node (N);
-            traverse (*N.neg, V);
-            break;
-
-        // V is on N
-        case INTERSECT:
-            traverse (*N.pos, V);
-            traverse (*N.neg, V);
-            break;
-        }
+    char i = test_line (bsp_node, view.x, view.z);
+    render_tree (bsp_node.child[i], view);
+    render_tree (bsp_node.child[i ^ 1], view);
 }
 
 /* test_line: figure out where x/y are with respect to
     line L (eg in front, behind, etc.) */
-char test_line (Linedef L, int x, int y) {
+char test_line (Node n, int x, int y) {
 
-    int y0, m, b;
-    char state = -1;
+    if (n.dx == 0)          // node line is straight vertical
+        return x > n.x;     // note: right side is front
 
-    m = (L.end->y - L.start->y) / (L.end->x - L.start->x);
-    b = L.start->y / (m * L.start->x);
+    if (n.dz == 0)          // node line is straight horizontal
+        return y <= n.z;
 
-    for (int x0 = L.start->x; x0 < L.end->x; ++x0) {
-        y0 = m * x0 + b;
-        if (x > x0 || x > y0) {
-            if (state == BEHIND || state == SAME_PLANE)
-                return INTERSECT;
-            state = IN_FRONT;
-        }
-        if (x < x0 || y < y0) {
-            if (state == IN_FRONT || state == SAME_PLANE)
-                return INTERSECT;
-            state = BEHIND;
-        }
+    // more advanced calculations
+    if (x - n.x < 0) {      // x is to the left
+        if (y - n.z < 0)    // but y is below --> front
+            return 0;
         else
-            state = SAME_PLANE;
+            return 1;
+    }
+    else {                  // x is to the right
+        if (y - n.z <0)     // and y is below --> front
+            return 0;
+        else
+            return 1;
     }
 }
 

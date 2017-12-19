@@ -22,14 +22,14 @@
 /* IWAD/PWAD header */
 typedef struct  {
     char id[4];
-    uint32_t numlumps;
-    uint32_t start_lumps;
+    int32_t numlumps;
+    int32_t start_lumps;
 } Wadinfo;
 
 /* lump headers */
 typedef struct {
-    uint32_t lumpstart;
-    uint32_t size;
+    int32_t lumpstart;
+    int32_t size;
     char name[8];
 } Filelump;
 
@@ -37,14 +37,14 @@ typedef struct {
 typedef struct {
     char name[8];
     int fd;
-    uint32_t position;
-    uint32_t size;
+    int32_t position;
+    int32_t size;
 } Lumpinfo;
 
 
 // VARS
-extern int numlumps;
-extern Lumpinfo *lumps;
+extern int NUM_LUMPS;
+extern Lumpinfo *LUMPS;
 
 
 // FUNCTIONS

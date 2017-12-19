@@ -1,7 +1,5 @@
 
-rendering
+rendering -> optimize (!!!) texturing (?)
+!!! FIX ROTATION !!!
 
-WAD reading (utilising the lumps)
-
-player input
-
+player input (improve)

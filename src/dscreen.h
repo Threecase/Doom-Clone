@@ -35,7 +35,7 @@ struct Screen {
 
 
 
-void dscreen_add_pixel (DScreen *scr, int x, int y, uint8_t pixel[3]);
+int dscreen_add_pixel (DScreen *scr, long x, long y, uint8_t pixel[3]);
 
 
 #endif

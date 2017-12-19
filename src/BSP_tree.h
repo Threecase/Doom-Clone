@@ -11,11 +11,16 @@
 #include <stdlib.h>
 
 #include "data_types.h"
+#include "drawing.h"
+#include "3D_manipulations.h"
 
 
-void create_BSP (BSP_Node *N, Linedef **polys, int num_polys);
+#define IS_SSECTOR  0x8000
 
-void traverse (BSP_Node N, Thing V);
+
+void create_BSP (Node *N, Linedef **polys, int num_polys);
+
+void render_tree (uint16_t node_number, Point V);
 
 
 #endif

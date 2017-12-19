@@ -7,52 +7,85 @@
 
 #include "data_types.h"
 #include "drawing.h"
-#include "BSP_tree.h"
 #include "read_wad.h"
+#include "wad_info.h"
+#include "BSP_tree.h"
+#include "rawterm.h"
 
-
-// FIXME TEMPORARY
-#define VERTS   4
 
 
 /* DOOM clone */
 int main (int argc, char *argv[]) {
 
+    extern int angle;
+    angle = 0;
+
+    int c;
+    char quit = 0;
+
+    long player_x, player_z;
+    player_x = 0;
+    player_z = 0;
+
     init_video();
+    term_raw();
+
     if (argc < 2)
         read_WAD ("/home/trevor/.config/gzdoom/doom.wad");
     else
         read_WAD (argv[1]);
 
-    Linedef **line_list = malloc (sizeof(Linedef *) * (VERTS / 2));
+    read_map_data();
 
-    Vertex vert_list[VERTS] =
-                    {   { -50, 50 },    // front face
-                        {  50, 50 },
-                        { -50,-50 },    // back face
-                        {  50,-50 },  };
+    while (!quit) {
+        c = raw_input();
+        if (c <= 0)
+            fatal_error ("raw_input failed : %i!\n", c);
 
+//        printf ("%i\n", c);
+        switch (c) {
+        // quit FIXME : temp keybind
+        case 'q':
+        case 'Q':
+        case 1393:
+            quit = 1;
+            break;
+        // Movement
+        // forward
+        case 'w':
+        case 'W':
+        case 1399:
+            player_z += 50;
+            break;
+        // backward
+        case 's':
+        case 'S':
+        case 1395:
+            player_z -= 50;
+            break;
+        // right
+        case 'd':
+        case 'D':
+        case 1377:
+            player_x += 50;
+//            angle = (angle - 1) % -359;
+            break;
+        // left
+        case 'a':
+        case 'A':
+        case 1380:
+            player_x -= 50;
+//            angle = (angle + 1) % 359;
+            break;
+        }
 
-    // set up line list
-    for (int i = 0, j = 0; j < VERTS; ++i, j += 2) {
-        line_list[i] = malloc (sizeof(Linedef));
-        line_list[i]->start = &vert_list[j];
-        line_list[i]->end = &vert_list[j + 1];
-        line_list[i]->flags = LD_solid;
-        line_list[i]->type = i;
-        line_list[i]->sector = NULL;
+        render_tree (NUM_NODES - 1, (Point){ player_x, 90, player_z });
+        draw_render();
     }
 
-    BSP_Node node = { line_list, NULL, NULL, 2};
-
-    render_node (node);
-
-    //draw_render();
-
-    pause ();
-
-
     shutdown_video();
+    term_noraw();
 
     return 0;
 }
+
