@@ -27,6 +27,8 @@
 // VARIABLES
 // FIXME temp
 int angle;
+Point player_pos;
+
 
 struct Screen G_SCREEN;
 
@@ -36,7 +38,8 @@ unsigned SCREEN_WIDTH, SCREEN_HEIGHT;
 
 
 // FUNCTIONS
-void render_ssector (SSector ssec, Point camera);
+void render_ssector (SSector ssec);
+void render_ssector_2D (SSector ssec);
 
 void draw_render();
 

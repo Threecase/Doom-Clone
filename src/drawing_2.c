@@ -6,6 +6,8 @@
 
 #include "drawing_2.h"
 
+#include "rawterm.h"
+
 
 /* get_edge: get all the pixels along the line
     x1/y1 to x2/y2 (ie left[] to right[])
@@ -111,10 +113,11 @@ void fill_poly (long coords[4][2], uint8_t col[3]) {
     get_edge (coords[1], coords[3], edges[3]);
 
     // draw the face
-    // TODO GENERALIZE THIS TO ANY FACE + optimize (can take nearly 1% of a second!)
+    // TODO optimize (can take nearly 1% of a second!)
     for (int j = 0; j < SCREEN_WIDTH && j <= abs (edges[0][0][0] - edges[2][0][0]); ++j)
-        for (int y = edges[1][j][1]; y <= edges[3][j][1]; ++y)
+        for (int y = edges[1][j][1]; y < SCREEN_HEIGHT && y <= edges[3][j][1]; ++y)
 //            draw_pixel (col, edges[3][j][0], y);
             dscreen_add_pixel (G_SCREEN.dscr, edges[3][j][0], y, col);
+    poly_count++;
 }
 

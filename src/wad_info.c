@@ -14,7 +14,7 @@ void **DATA;
 
 
 /* read_map_data: read the map data from the WAD */
-void read_map_data() {
+void read_map_data (int lvl_num) {
 
     DATA = malloc (sizeof(void *) * 10);
 
@@ -26,9 +26,12 @@ void read_map_data() {
         sizeof(Thing), sizeof(Linedef), sizeof(Sidedef), sizeof(Vertex),
         sizeof(Seg), sizeof(SSector), sizeof(Node), sizeof(Sector), 1, 1 };
 
+    char lvl_name[5];
+    sprintf (lvl_name, "E1M%i", lvl_num);
+
     int i;
-    for (int n = 0; n < 8; ++n) {
-        i = get_lump_index ("E1M1") + 1;
+    for (int n = 0; n < 8; ++n) {   // FIXME : read the REJECT and BLOCKMAP
+        i = get_lump_index (lvl_name) + 1;
         Lumpinfo lump = LUMPS[i];
 
         for (; strncasecmp (lump_name[n], lump.name, 8);)

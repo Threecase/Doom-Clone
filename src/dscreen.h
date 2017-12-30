@@ -24,8 +24,8 @@ typedef struct {
     struct to hold framebuffer
     screen info */
 struct Screen {
-    struct fb_fix_screeninfo* finfo;
-    struct fb_var_screeninfo* vinfo;
+    struct fb_fix_screeninfo *finfo;
+    struct fb_var_screeninfo *vinfo;
     int fd;
     long size;
 

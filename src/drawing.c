@@ -5,6 +5,77 @@
 
 #include "drawing.h"
 
+#include "rawterm.h"
+#include "drawing_2.h"
+
+
+
+/* render_ssector: draw a subsector to the screen */
+// TODO : IMPROVE !!!
+void render_ssector (SSector ssec) {
+
+    Point pnt;
+    int outx, outy, seg_n, corner;
+    uint8_t col[ssec.num_segs][3];
+
+    long pixels_to_draw[ssec.num_segs][4][2];
+    memset (pixels_to_draw, 0, ssec.num_segs * 8);
+
+    /* loop through lines in N, translate to 3D, and
+        attempt to draw the polygon to the screen */
+    seg_n = 0;
+    for (int i = ssec.start_seg; i < ssec.start_seg + ssec.num_segs; ++i, ++seg_n) {
+        corner = 0;
+        // TODO : make this less messy?
+        Sector sec = SECTOR_LIST[SIDEDEF_LIST[LINEDEF_LIST[SEG_LIST[
+                        ssec.start_seg].line].sides[0]].sector];
+
+        for (int y = sec.floor_h, n = 0; n < 2; ++n, y = sec.ceil_h) {
+
+            // start vertex
+            pnt.x = VERT_LIST[SEG_LIST[i].start].x;
+            pnt.y = y;
+            pnt.z = VERT_LIST[SEG_LIST[i].start].z;
+            outx = outy = -1;
+            if (pnt.z < player_pos.z &&
+              coords_3D_to_2D (pnt, player_pos, angle, &outx, &outy)) {
+                // add to drawbuffer
+                pixels_to_draw[seg_n][corner][0] = (SCREEN_WIDTH/2) + outx;
+                pixels_to_draw[seg_n][corner++][1] = (SCREEN_HEIGHT/2) + outy;
+            }
+            else {
+                memset (pixels_to_draw[seg_n], 0, sizeof(long) * 8);
+                break;
+            }
+
+            // end vertex
+            pnt.x = VERT_LIST[SEG_LIST[i].end].x;
+            pnt.y = y;
+            pnt.z = VERT_LIST[SEG_LIST[i].end].z;
+            outx = outy = -1;
+            if (pnt.z < player_pos.z &&
+              coords_3D_to_2D (pnt, player_pos, angle, &outx, &outy)) {
+                // add to drawbuffer
+                pixels_to_draw[seg_n][corner][0] = (SCREEN_WIDTH/2) + outx;
+                pixels_to_draw[seg_n][corner++][1] = (SCREEN_HEIGHT/2) + outy;
+            }
+            else {
+                memset (pixels_to_draw[seg_n], 0, sizeof(long) * 8);
+                break;
+            }
+        }
+        col[seg_n][0] = pnt.z % 255;
+        col[seg_n][1] = pnt.z % 255;
+        col[seg_n][2] = pnt.z % 255;
+    }
+    for (int j = 0, draw = 0; j < ssec.num_segs; ++j, draw = 0) {
+        for (int i = 0; !draw && i < 4; ++i)
+            if (pixels_to_draw[j][i][0] != 0 || pixels_to_draw[j][i][1] != 0)
+                draw = 1;
+        if (draw)
+            fill_poly (pixels_to_draw[j], col[j]);
+    }
+}
 
 /* pixel_colour: inline function to
     set the correct pixel colour*/
@@ -13,89 +84,6 @@ static inline uint32_t pixel_colour (uint8_t r, uint8_t g, uint8_t b,
     return (r << vinfo->red.offset)
          | (g << vinfo->green.offset)
          | (b << vinfo->blue.offset);
-}
-
-
-/* draw_render: finalize the render for this frame;
-    draw and clear the dscreen */
-void draw_render() {
-
-    for (int y = 0; y < G_SCREEN.dscr->height; ++y)
-        for (int x = 0; x < G_SCREEN.dscr->width; ++x) {
-            draw_pixel (G_SCREEN.dscr->pixels[x][y], x, y);
-            G_SCREEN.dscr->pixels[x][y][0] = 0;
-            G_SCREEN.dscr->pixels[x][y][1] = 0;
-            G_SCREEN.dscr->pixels[x][y][2] = 0;
-        }
-    for (int x = 0; x < G_SCREEN.dscr->height; ++x)
-        memset (G_SCREEN.dscr->pixels[x], 0, G_SCREEN.dscr->width);
-}
-
-/* render_ssec: draw a subsector to the screen */
-void render_ssector (SSector ssec, Point camera) {
-
-    Point pnt;
-    int outx, outy, seg_n, corner;
-    uint8_t col[ssec.num_segs][3];
-
-    long pixels_to_draw[ssec.num_segs][4][2];
-
-    /* loop through lines in N, translate to 3D, and
-        attempt to draw the polygon to the screen */
-    seg_n = 0;
-    for (int i = ssec.start_seg; i < ssec.start_seg + ssec.num_segs; ++i) {
-        corner = 0;
-        for (int y = 0; y < 255; y += 254) {    // FIXME hardcoded y limit
-
-            // start vertex
-            pnt.x = VERT_LIST[SEG_LIST[i].start].x;
-            pnt.y = y;
-            pnt.z = VERT_LIST[SEG_LIST[i].start].z;
-            if (pnt.z < camera.z) {
-                coords_3D_to_2D (pnt, camera, angle, &outx, &outy);
-                if (&outx != NULL && &outy != NULL) {
-                    // add to drawbuffer
-                    pixels_to_draw[seg_n][corner][0] = (SCREEN_WIDTH/2) + outx;
-                    pixels_to_draw[seg_n][corner++][1] = (SCREEN_HEIGHT/2) + outy;
-                    col[seg_n][0] = col[seg_n][1] = col[seg_n][2] = pnt.z % 255;
-                }
-            }
-            else {
-                pixels_to_draw[seg_n][corner][0] = 0;
-                pixels_to_draw[seg_n][corner++][1] = 0;
-                pixels_to_draw[seg_n][corner][0] = 0;
-                pixels_to_draw[seg_n][corner++][1] = 0;
-                continue;
-            }
-
-            // end vertex
-            pnt.x = VERT_LIST[SEG_LIST[i].end].x;
-            pnt.y = y;
-            pnt.z = VERT_LIST[SEG_LIST[i].end].z;
-            if (pnt.z < camera.z) {
-                coords_3D_to_2D (pnt, camera, angle, &outx, &outy);
-                if (&outx == NULL || &outy == NULL)
-                    continue;
-                // add to drawbuffer
-                pixels_to_draw[seg_n][corner][0] = (SCREEN_WIDTH/2) + outx;
-                pixels_to_draw[seg_n][corner++][1] = (SCREEN_HEIGHT/2) + outy;
-                col[seg_n][0] = col[seg_n][1] = col[seg_n][2] = pnt.z % 255;
-            }
-            else {
-                pixels_to_draw[seg_n][corner-1][0] = 0;
-                pixels_to_draw[seg_n][corner-1][1] = 0;
-                pixels_to_draw[seg_n][corner][0] = 0;
-                pixels_to_draw[seg_n][corner++][1] = 0;
-                continue;
-            }
-        }
-        seg_n++;
-    }
-    for (int j = 0; j < ssec.num_segs; ++j) {
-        /*for (int i = 0; i < 4; ++i)
-            draw_pixel (col, pixels_to_draw[j][i][0], pixels_to_draw[j][i][1]);*/
-        fill_poly (pixels_to_draw[j], col[j]);
-    }
 }
 
 /* draw_pixel: draw a pixel to the screen */
@@ -113,6 +101,21 @@ void draw_pixel (uint8_t p[3], long x, long y) {
              * G_SCREEN.finfo->line_length;
     *((uint32_t*)(G_SCREEN.fbp + loc)) = pixel_colour (p[0], p[1], p[2],
                                             G_SCREEN.vinfo);
+}
+
+/* draw_render: finalize the render for this frame;
+    draw and clear the dscreen */
+void draw_render() {
+
+    for (int y = 0; y < G_SCREEN.dscr->height; ++y)
+        for (int x = 0; x < G_SCREEN.dscr->width; ++x) {
+            draw_pixel (G_SCREEN.dscr->pixels[x][y], x, y);
+            G_SCREEN.dscr->pixels[x][y][0] = 0;
+            G_SCREEN.dscr->pixels[x][y][1] = 0;
+            G_SCREEN.dscr->pixels[x][y][2] = 0;
+        }
+//    raw_writes ("%i polys drawn\n\r", poly_count);
+    poly_count = 0;
 }
 
 /* init_video: initialize graphics */

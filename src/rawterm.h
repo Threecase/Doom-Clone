@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 
 struct termios def_term;
@@ -24,7 +25,7 @@ int raw_input();
 
 void raw_writec (char c);
 
-void raw_writes (char *str);
+void raw_writes (char *format, ...);
 
 
 #endif

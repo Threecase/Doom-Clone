@@ -18,9 +18,9 @@ typedef struct Point {
 } Point;
 
 
-void rotate_on_axis (int x, int y, int angle, int *newx, int *newy);
+void rotate_on_axis (int x, int y, int xoff, int yoff, int angle, int *newx, int *newy);
 
-void coords_3D_to_2D (Point A, Point C, int cam_angle, int *x2D, int *y2D);
+int coords_3D_to_2D (Point A, Point C, int cam_angle, int *x2D, int *y2D);
 
 
 #endif

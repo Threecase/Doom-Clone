@@ -11,6 +11,9 @@
 #include "drawing.h"
 
 
+int poly_count;
+
+
 void fill_poly (long coords[4][2], uint8_t col[3]);
 
 

@@ -38,8 +38,6 @@ int term_raw() {
 
     extern struct termios def_term;
     struct termios raw_term;
-    cfmakeraw (&raw_term);
-//    raw_term.c_lflag &= (~ICANON & ~ECHO);
 
 
     if (!isatty (STDIN_FILENO))
@@ -51,6 +49,8 @@ int term_raw() {
     if (atexit (term_noraw) != 0)
         return term_error ("Couldn't register term_noraw atexit!", 2);
 
+    raw_term = def_term;
+    cfmakeraw (&raw_term);
     tcsetattr (STDIN_FILENO, TCSAFLUSH, &raw_term);
 
     term_israw = 1;
@@ -60,7 +60,8 @@ int term_raw() {
 
 /* term_noraw: reset the terminal to buffered mode */
 void term_noraw() {
-    tcsetattr (STDIN_FILENO, TCSAFLUSH, &def_term);
+    tcflush (STDIN_FILENO, TCIOFLUSH);
+    tcsetattr (STDIN_FILENO, TCSANOW, &def_term);
     term_israw = 0;
 }
 
@@ -68,6 +69,7 @@ void term_noraw() {
 int raw_input() {
 
     int bytes_read, c;
+    c = 0;
 
     tcflush (STDIN_FILENO, TCIFLUSH);
     bytes_read = read (STDIN_FILENO, &c, 1);
@@ -85,8 +87,16 @@ void raw_writec (char c) {
 }
 
 /* raw_write: write character(s) to the terminal */
-void raw_writes (char *str) {
+void raw_writes (char *format, ...) {
+
+    va_list ap;
+    va_start (ap, format);
+    char str[1000];
+
+    vsprintf (str, format, ap);
+
     for (int i = 0; str+i != NULL && *(str+i) != '\0'; ++i)
         raw_writec (*(str+i));
+    va_end (ap);
 }
 

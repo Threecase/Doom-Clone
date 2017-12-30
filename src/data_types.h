@@ -177,6 +177,7 @@ typedef struct {
 
 
 
+// TODO : properly implement these
 /* REJECT:
     size = ceil ((num_sectors^2) / 8)
     array of bits

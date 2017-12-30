@@ -13,74 +13,94 @@
 #include "rawterm.h"
 
 
+#define SPEED   100
+#define ROTSP   90
+#define DEF_WAD_LOC "doom.wad"
+
+
 
 /* DOOM clone */
 int main (int argc, char *argv[]) {
 
+    extern Point player_pos;
+    player_pos.x = 0;
+    player_pos.y = 127;
+    player_pos.z = 0;
     extern int angle;
     angle = 0;
+    extern int poly_count;
+    poly_count = 0;
 
     int c;
     char quit = 0;
-
-    long player_x, player_z;
-    player_x = 0;
-    player_z = 0;
 
     init_video();
     term_raw();
 
     if (argc < 2)
-        read_WAD ("/home/trevor/.config/gzdoom/doom.wad");
+        read_WAD (DEF_WAD_LOC);
     else
         read_WAD (argv[1]);
 
-    read_map_data();
+    int lvl_num = 1;
+    read_map_data (lvl_num);
 
     while (!quit) {
         c = raw_input();
         if (c <= 0)
             fatal_error ("raw_input failed : %i!\n", c);
 
-//        printf ("%i\n", c);
+//        raw_writes ("%i\n", c);
         switch (c) {
-        // quit FIXME : temp keybind
+        // FIXME : temp keybinds
+        // quit 
         case 'q':
         case 'Q':
-        case 1393:
             quit = 1;
             break;
+        // load next level
+        case '\t':
+            lvl_num = (lvl_num + 1) % 9;
+            read_map_data (lvl_num);
+            break;
+
+
         // Movement
         // forward
         case 'w':
         case 'W':
-        case 1399:
-            player_z += 50;
+            player_pos.z += SPEED;
             break;
         // backward
         case 's':
         case 'S':
-        case 1395:
-            player_z -= 50;
+            player_pos.z -= SPEED;
             break;
-        // right
-        case 'd':
+
+        // right move
         case 'D':
-        case 1377:
-            player_x += 50;
-//            angle = (angle - 1) % -359;
+            player_pos.x += SPEED;
             break;
-        // left
-        case 'a':
+        // right rotate
+        case 'd':
+            angle = (angle - ROTSP) % 360;
+            break;
+
+        // left move
         case 'A':
-        case 1380:
-            player_x -= 50;
-//            angle = (angle + 1) % 359;
+            player_pos.x -= SPEED;
+            break;
+        // left rotate
+        case 'a':
+            angle = (angle + ROTSP) % 360;
             break;
         }
 
-        render_tree (NUM_NODES - 1, (Point){ player_x, 90, player_z });
-        draw_render();
+        if (!quit) {
+            render_tree (NUM_NODES - 1);
+            draw_render();
+//            raw_writes ("%i %i\n\r", player_pos.x, player_pos.z);
+        }
     }
 
     shutdown_video();

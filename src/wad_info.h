@@ -41,7 +41,7 @@ extern void **DATA;
 
 
 // FUNCTIONS
-void read_map_data ();
+void read_map_data (int lvl_num);
 
 
 #endif

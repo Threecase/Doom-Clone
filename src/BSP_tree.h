@@ -20,7 +20,7 @@
 
 void create_BSP (Node *N, Linedef **polys, int num_polys);
 
-void render_tree (uint16_t node_number, Point V);
+void render_tree (uint16_t node_number);
 
 
 #endif
