@@ -69,8 +69,6 @@ void get_edge (long left[2], long right[2], long edge_table[SCREEN_WIDTH][2]) {
 void sort_vertices (long coords[4][2]) {
 
     /* sort the coords */
-    char s_i, swap;
-
     for (int max = 4; max > 0; --max)
         for (int i = 1; i < max; ++i)
             if (coords[i-1][0] > coords[i][0]) {

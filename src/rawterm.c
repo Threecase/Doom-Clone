@@ -9,6 +9,7 @@ char term_israw = 0;
 
 
 
+#ifndef __SDL
 /* term_error: error logging
     severity:   0 = info
                 1 = warning
@@ -85,18 +86,23 @@ int raw_input() {
 void raw_writec (char c) {
     write (STDOUT_FILENO, &c, 1);
 }
+#endif
 
 /* raw_write: write character(s) to the terminal */
 void raw_writes (char *format, ...) {
 
     va_list ap;
     va_start (ap, format);
+#ifndef __SDL
     char str[1000];
 
     vsprintf (str, format, ap);
 
     for (int i = 0; str+i != NULL && *(str+i) != '\0'; ++i)
         raw_writec (*(str+i));
+#else
+    vprintf (format, ap);
     va_end (ap);
+#endif
 }
 

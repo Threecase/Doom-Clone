@@ -6,11 +6,13 @@
 
 #include "wad_info.h"
 
+#include "rawterm.h" // FIXME : TEMP
+
 
 
 // lists for WAD stuff
-int NUM_STUFF[10];
-void **DATA;
+extern int NUM_STUFF[10];
+extern void **DATA;
 
 
 /* read_map_data: read the map data from the WAD */
@@ -29,8 +31,7 @@ void read_map_data (int lvl_num) {
     char lvl_name[5];
     sprintf (lvl_name, "E1M%i", lvl_num);
 
-    int i;
-    for (int n = 0; n < 8; ++n) {   // FIXME : read the REJECT and BLOCKMAP
+    for (int n = 0, i; n < 8; ++n) {   // FIXME : read the REJECT and BLOCKMAP
         i = get_lump_index (lvl_name) + 1;
         Lumpinfo lump = LUMPS[i];
 

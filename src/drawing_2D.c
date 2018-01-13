@@ -7,8 +7,6 @@
 #include "rawterm.h"
 
 
-#define ZOOM    20
-
 
 /* draw_line_2D: draw a 2D line */
 void draw_line_2D (uint8_t col[3], int start[2], int end[2]) {
@@ -60,28 +58,29 @@ void render_ssector_2D (SSector ssec) {
 
 //    printf ("%i %i\n", player_pos.x, player_pos.z);
 
-    int seg_n, corner;
     uint8_t col[3];
     int start[2], end[2];
 
+    col[0] = col[1] = col[2] = 255;
+
     /* loop through lines in N, draw them to the screen */
-    seg_n = 0;
-    int px, pz;
-    px = player_pos.x / ZOOM;
-    pz = player_pos.z / ZOOM;
     for (int i = ssec.start_seg; i < ssec.start_seg + ssec.num_segs; ++i) {
 
-        start[0] = VERT_LIST[SEG_LIST[i].start].x / ZOOM;
-        start[1] = VERT_LIST[SEG_LIST[i].start].z / ZOOM;
-        rotate_on_axis (start[0], start[1], -px, pz, angle, start, start+1);
+        start[0] = VERT_LIST[SEG_LIST[i].start].x - player_pos.x;
+        start[1] = VERT_LIST[SEG_LIST[i].start].z + player_pos.z;
+        end[0] = VERT_LIST[SEG_LIST[i].end].x - player_pos.x;
+        end[1] = VERT_LIST[SEG_LIST[i].end].z + player_pos.z;
 
-        end[0] = VERT_LIST[SEG_LIST[i].end].x / ZOOM;
-        end[1] = VERT_LIST[SEG_LIST[i].end].z / ZOOM;
-        rotate_on_axis (end[0], end[1], -px, pz, angle, end, end+1);
+        rotate_on_axis (start[0], start[1], angle, start, start+1);
+        rotate_on_axis (end[0], end[1], angle, end, end+1);
 
-        col[0] = col[1] = col[2] = 255;
+        start[0] += SCREEN_WIDTH / 2;
+        start[1] += SCREEN_HEIGHT / 2;
+        end[0] += SCREEN_WIDTH / 2;
+        end[1] += SCREEN_HEIGHT / 2;
+
         draw_line_2D (col, start, end);
-//        raw_writes ("%i %i\n", start[0], start[1]);
+//        raw_writes ("%i %i\n\r", start[0], start[1]);
     }
 
     // player dot

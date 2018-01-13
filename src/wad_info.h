@@ -36,8 +36,8 @@
 
 
 // VARIABLES
-extern int NUM_STUFF[10];
-extern void **DATA;
+int NUM_STUFF[10];
+void **DATA;
 
 
 // FUNCTIONS

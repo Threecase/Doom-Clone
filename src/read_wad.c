@@ -6,12 +6,13 @@
 #include "read_wad.h"
 
 
+
 int NUM_LUMPS = 0;
 Lumpinfo *LUMPS = NULL;
 
 
 /* read_WAD: read a WAD file */
-void read_WAD (char *wadname) {
+void read_WAD (const char *wadname) {
 
     Wadinfo wadheader;
     Filelump *raw_lumps = NULL;
@@ -55,12 +56,11 @@ void read_WAD (char *wadname) {
 }
 
 /* get_lump_index: return index of a lump */
-int get_lump_index (char *lump_name) {
+int get_lump_index (const char *lump_name) {
 
-    for (int i = NUM_LUMPS-1; i > 0; --i) {
+    for (int i = NUM_LUMPS-1; i >= 0; --i)
         if (!strncasecmp (LUMPS[i].name, lump_name, strnlen (lump_name, 8)))
             return i;
-    }
     return -1;  // error: lump not found
 }
 

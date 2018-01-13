@@ -10,6 +10,10 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#ifdef __SDL
+#include <SDL2/SDL.h>
+#endif
+
 
 /* DYNAMIC SCREEN:
     a backbuffer for the screen,
@@ -21,15 +25,20 @@ typedef struct {
 } DScreen;
 
 /* SCREEN:
-    struct to hold framebuffer
+    struct to hold
     screen info */
 struct Screen {
+#ifndef __SDL
     struct fb_fix_screeninfo *finfo;
     struct fb_var_screeninfo *vinfo;
     int fd;
     long size;
 
     uint8_t *fbp;
+#else
+    SDL_Renderer *renderer;
+    SDL_Window *window;
+#endif
     DScreen *dscr;
 };
 

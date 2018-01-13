@@ -5,8 +5,7 @@
 
 #include "drawing.h"
 
-#include "rawterm.h"
-#include "drawing_2.h"
+#include "rawterm.h"    // FIXME : TEMP
 
 
 
@@ -37,8 +36,7 @@ void render_ssector (SSector ssec) {
             pnt.y = y;
             pnt.z = VERT_LIST[SEG_LIST[i].start].z;
             outx = outy = -1;
-            if (pnt.z < player_pos.z &&
-              coords_3D_to_2D (pnt, player_pos, angle, &outx, &outy)) {
+            if (coords_3D_to_2D (pnt, player_pos, angle, &outx, &outy)) {
                 // add to drawbuffer
                 pixels_to_draw[seg_n][corner][0] = (SCREEN_WIDTH/2) + outx;
                 pixels_to_draw[seg_n][corner++][1] = (SCREEN_HEIGHT/2) + outy;
@@ -53,8 +51,7 @@ void render_ssector (SSector ssec) {
             pnt.y = y;
             pnt.z = VERT_LIST[SEG_LIST[i].end].z;
             outx = outy = -1;
-            if (pnt.z < player_pos.z &&
-              coords_3D_to_2D (pnt, player_pos, angle, &outx, &outy)) {
+            if (coords_3D_to_2D (pnt, player_pos, angle, &outx, &outy)) {
                 // add to drawbuffer
                 pixels_to_draw[seg_n][corner][0] = (SCREEN_WIDTH/2) + outx;
                 pixels_to_draw[seg_n][corner++][1] = (SCREEN_HEIGHT/2) + outy;
@@ -63,10 +60,10 @@ void render_ssector (SSector ssec) {
                 memset (pixels_to_draw[seg_n], 0, sizeof(long) * 8);
                 break;
             }
+            col[seg_n][0] = pnt.x % 255;
+            col[seg_n][1] = 127;
+            col[seg_n][2] = pnt.z % 255;
         }
-        col[seg_n][0] = pnt.z % 255;
-        col[seg_n][1] = pnt.z % 255;
-        col[seg_n][2] = pnt.z % 255;
     }
     for (int j = 0, draw = 0; j < ssec.num_segs; ++j, draw = 0) {
         for (int i = 0; !draw && i < 4; ++i)
@@ -77,6 +74,8 @@ void render_ssector (SSector ssec) {
     }
 }
 
+// not needed with SDL
+#ifndef __SDL
 /* pixel_colour: inline function to
     set the correct pixel colour*/
 static inline uint32_t pixel_colour (uint8_t r, uint8_t g, uint8_t b,
@@ -85,10 +84,12 @@ static inline uint32_t pixel_colour (uint8_t r, uint8_t g, uint8_t b,
          | (g << vinfo->green.offset)
          | (b << vinfo->blue.offset);
 }
+#endif
 
 /* draw_pixel: draw a pixel to the screen */
 void draw_pixel (uint8_t p[3], long x, long y) {
 
+#ifndef __SDL
     if (x > G_SCREEN.vinfo->xres-1 || x < 0
      || y > G_SCREEN.vinfo->yres-1 || y < 0
      || !G_VIDEO_INIT
@@ -101,6 +102,10 @@ void draw_pixel (uint8_t p[3], long x, long y) {
              * G_SCREEN.finfo->line_length;
     *((uint32_t*)(G_SCREEN.fbp + loc)) = pixel_colour (p[0], p[1], p[2],
                                             G_SCREEN.vinfo);
+#else
+    SDL_SetRenderDrawColor (G_SCREEN.renderer, p[0], p[1], p[2], 255);
+    SDL_RenderDrawPoint (G_SCREEN.renderer, x, y);
+#endif
 }
 
 /* draw_render: finalize the render for this frame;
@@ -114,7 +119,10 @@ void draw_render() {
             G_SCREEN.dscr->pixels[x][y][1] = 0;
             G_SCREEN.dscr->pixels[x][y][2] = 0;
         }
-//    raw_writes ("%i polys drawn\n\r", poly_count);
+#ifdef __SDL
+    SDL_RenderPresent (G_SCREEN.renderer);
+    SDL_RenderClear (G_SCREEN.renderer);
+#endif
     poly_count = 0;
 }
 
@@ -122,11 +130,13 @@ void draw_render() {
 void init_video() {
 
     extern struct Screen G_SCREEN;
+    extern unsigned SCREEN_WIDTH, SCREEN_HEIGHT; 
+    extern char (*PALETTE)[3];
 
+#ifndef __SDL
     G_SCREEN.fd = open ("/dev/fb0", O_RDWR);
     if (G_SCREEN.fd == -1)
         fatal_error ("Cannot open framebuffer!");
-
 
     // get variable screen info
     G_SCREEN.vinfo = malloc (sizeof(struct fb_var_screeninfo));
@@ -147,19 +157,55 @@ void init_video() {
     G_SCREEN.fbp = mmap (0, G_SCREEN.size, PROT_READ | PROT_WRITE,
                     MAP_SHARED, G_SCREEN.fd, (off_t)0);
 
+    SCREEN_WIDTH = G_SCREEN.vinfo->xres;
+    SCREEN_HEIGHT = G_SCREEN.vinfo->yres;
+#else
+    if (SDL_Init (SDL_INIT_VIDEO))
+        fatal_error ("SDL_Init failed: %s", SDL_GetError());
+
+    SDL_DisplayMode mode;
+    // FIXME : possible errors assuming display=0
+    if (SDL_GetCurrentDisplayMode (0, &mode))
+        fatal_error ("Failed to get display mode: %s", SDL_GetError());
+
+    SCREEN_WIDTH = 640;
+    SCREEN_HEIGHT = 480;
+
+    // TODO : configure res / fullscreen etc.
+    G_SCREEN.window = SDL_CreateWindow ("Doom", SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT,
+        /*SDL_WINDOW_FULLSCREEN*/0);
+    if (G_SCREEN.window == NULL)
+        fatal_error ("Failed to create SDL window: %s", SDL_GetError());
+
+    SDL_GetWindowSize (G_SCREEN.window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
+
+    G_SCREEN.renderer = SDL_CreateRenderer (G_SCREEN.window, -1,
+        SDL_RENDERER_ACCELERATED);
+    if (G_SCREEN.renderer == NULL)
+        fatal_error ("Failed to create SDL renderer: %s", SDL_GetError());
+#endif
+
     G_SCREEN.dscr = malloc (sizeof(DScreen));
-    G_SCREEN.dscr->width = G_SCREEN.vinfo->xres;
-    G_SCREEN.dscr->height = G_SCREEN.vinfo->yres;
+    G_SCREEN.dscr->width = SCREEN_WIDTH;
+    G_SCREEN.dscr->height = SCREEN_HEIGHT;
     G_SCREEN.dscr->pixels = calloc (G_SCREEN.dscr->width,
         sizeof(uint8_t (*)[3]));
     for (int i = 0; i < G_SCREEN.dscr->width; ++i)
         G_SCREEN.dscr->pixels[i] = calloc (G_SCREEN.dscr->height,
                                     sizeof(uint8_t (*)[3]));
 
+    // read in palettes
+    PALETTE = malloc (14 * 768);    /* the 14 palettes are
+                                        always 768 bytes long */
+    if (PALETTE == NULL)
+        fatal_error ("init_video: failed to alloc palette!");
 
-    extern unsigned SCREEN_WIDTH, SCREEN_HEIGHT; 
-    SCREEN_WIDTH = G_SCREEN.vinfo->xres;
-    SCREEN_HEIGHT = G_SCREEN.vinfo->yres;
+    int i = get_lump_index ("PLAYPAL");
+    if (i < 0)
+        fatal_error ("WAD missing PLAYPAL lump!");
+    read_lump (i, PALETTE);
+
 
     extern char G_VIDEO_INIT;
     G_VIDEO_INIT = 1;
@@ -168,11 +214,24 @@ void init_video() {
 /* shutdown_video: cleanup graphics variables */
 void shutdown_video() {
 
+    for (int i = 0; i < G_SCREEN.dscr->width; ++i)
+        free (G_SCREEN.dscr->pixels[i]);
+    free (G_SCREEN.dscr->pixels);
+    free (G_SCREEN.dscr);
+#ifndef __SDL
     free (G_SCREEN.vinfo);
     free (G_SCREEN.finfo);
-    free (G_SCREEN.dscr);
     munmap (G_SCREEN.fbp, G_SCREEN.size);
     close (G_SCREEN.fd);
+#else
+    SDL_DestroyRenderer (G_SCREEN.renderer);
+    G_SCREEN.renderer = NULL;
+    SDL_DestroyWindow (G_SCREEN.window);
+    G_SCREEN.window = NULL;
+    SDL_Quit();
+#endif
+
+    free (PALETTE);
 
     G_VIDEO_INIT = 0;
 

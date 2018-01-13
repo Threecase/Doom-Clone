@@ -49,9 +49,9 @@ extern Lumpinfo *LUMPS;
 
 // FUNCTIONS
 
-void read_WAD (char *wadname);
+void read_WAD (const char *wadname);
 
-int get_lump_index (char *lump_name);
+int get_lump_index (const char *lump_name);
 
 int get_lump_size (int lump);
 

@@ -5,9 +5,10 @@
  */
 
 // FIXME: TEMP INCLUDE
-#include <stdio.h>
+#include "rawterm.h"
 
 #include "BSP_tree.h"
+#include "wad_info.h"
 
 
 
@@ -15,19 +16,22 @@ char test_line (Node n, int x, int z);
 
 
 /* render_tree: Traverse the BSP tree */
-void render_tree (uint16_t n_num) {
+void render_tree (int16_t n_num) {
 
     // N is a subsector
     if (n_num & IS_SSECTOR) {
         if (n_num == -1)
             n_num = 0;
-        render_ssector/*_2D*/ (SSECTOR_LIST[n_num & (~IS_SSECTOR)]);
+        if (DRAW_MODE == DRAW_MODE_2D)
+            render_ssector_2D (SSECTOR_LIST[n_num & (~IS_SSECTOR)]);
+        else
+            render_ssector (SSECTOR_LIST[n_num & (~IS_SSECTOR)]);
         return;
     }
 
-    Node bsp_node = (Node)NODE_LIST[n_num];
+    Node bsp_node = NODE_LIST[n_num];
 
-    char i = test_line (bsp_node, player_pos.x, player_pos.z);
+    int i = test_line (bsp_node, player_pos.x, player_pos.z);
     render_tree (bsp_node.child[i]);
     // TODO : only if the rear is visible
     render_tree (bsp_node.child[i^1]);
@@ -53,8 +57,8 @@ char test_line (Node n, int x, int z) {
     // more advanced calculations
     double m = ((n.z + n.dz) - n.z) / ((n.x + n.dx) - n.x);
     double b = n.z - m * n.x;
-    if (z < m * x + b)
-        return n.x > n.x + n.dx;
-    return n.x < n.x + n.dx;
+    if (z > m * x + b)  // z in front
+        return n.x + n.dx > n.x;
+    return n.x + n.dx < n.x;
 }
 

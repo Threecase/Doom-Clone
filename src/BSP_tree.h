@@ -15,12 +15,12 @@
 #include "3D_manipulations.h"
 
 
-#define IS_SSECTOR  0x8000
+#define IS_SSECTOR  ((int16_t)0x8000)
 
 
 void create_BSP (Node *N, Linedef **polys, int num_polys);
 
-void render_tree (uint16_t node_number);
+void render_tree (int16_t node_number);
 
 
 #endif

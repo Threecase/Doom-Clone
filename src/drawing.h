@@ -7,11 +7,18 @@
 #define _DRAWING_H
 
 
+#ifndef __SDL
+
 #include <linux/fb.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+#else
+#include <SDL2/SDL.h>
+#endif
+
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -24,11 +31,19 @@
 #include "wad_info.h"
 
 
+#define DRAW_MODE_3D    0
+#define DRAW_MODE_2D    1
+
+
 // VARIABLES
-// FIXME temp
+// FIXME move these
 int angle;
 Point player_pos;
 
+
+char DRAW_MODE;
+
+char (*PALETTE)[3];
 
 struct Screen G_SCREEN;
 
