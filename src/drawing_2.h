@@ -4,9 +4,8 @@
  *
  */
 
-#ifndef _DRAWING_2_H
-#define _DRAWING_2_H
-
+#ifndef __DRAWING2_H
+#define __DRAWING2_H
 
 #include "drawing.h"
 
@@ -14,7 +13,7 @@
 int poly_count;
 
 
-void fill_poly (long coords[4][2], uint8_t col[3]);
+void fill_poly (long coords[4][2], Colour col);
 
 
 #endif

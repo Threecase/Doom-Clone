@@ -6,8 +6,6 @@
 
 #include "wad_info.h"
 
-#include "rawterm.h" // FIXME : TEMP
-
 
 
 // lists for WAD stuff

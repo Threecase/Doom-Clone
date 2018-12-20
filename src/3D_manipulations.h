@@ -9,7 +9,7 @@
 
 #include <math.h>
 
-#define FOV 256     /* camera FOV */
+#define FOV 500     /* camera FOV */
 
 
 /* 3D (or 2D) points */

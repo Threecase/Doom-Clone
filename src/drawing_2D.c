@@ -4,12 +4,11 @@
  */
 
 #include "drawing.h"
-#include "rawterm.h"
 
 
 
 /* draw_line_2D: draw a 2D line */
-void draw_line_2D (uint8_t col[3], int start[2], int end[2]) {
+void draw_line_2D (Colour col, int start[2], int end[2]) {
 
     int x, y;
     int deltax = end[0] - start[0];
@@ -38,7 +37,7 @@ void draw_line_2D (uint8_t col[3], int start[2], int end[2]) {
     numerator = longest / 2;
     for (int i = 0; i <= longest && i <= SCREEN_WIDTH; ++i) {
     
-        dscreen_add_pixel (G_SCREEN.dscr, x, y, col);
+        draw_pixel (x,y, col);
 
         numerator += shortest;
         if (numerator >= longest) {
@@ -58,10 +57,10 @@ void render_ssector_2D (SSector ssec) {
 
 //    printf ("%i %i\n", player_pos.x, player_pos.z);
 
-    uint8_t col[3];
+    Colour col;
     int start[2], end[2];
 
-    col[0] = col[1] = col[2] = 255;
+    col.r = col.g = col.b = col.a = 255;
 
     /* loop through lines in N, draw them to the screen */
     for (int i = ssec.start_seg; i < ssec.start_seg + ssec.num_segs; ++i) {
@@ -85,9 +84,12 @@ void render_ssector_2D (SSector ssec) {
 
     // player dot
     for (int i = -1; i < 2; ++i) {
-        dscreen_add_pixel (G_SCREEN.dscr, i + SCREEN_WIDTH / 2, -1 + SCREEN_HEIGHT / 2, (uint8_t [3]){ 255,0,0 });
-        dscreen_add_pixel (G_SCREEN.dscr, i + SCREEN_WIDTH / 2, 0 + SCREEN_HEIGHT / 2, (uint8_t [3]){ 255,0,0 });
-        dscreen_add_pixel (G_SCREEN.dscr, i + SCREEN_WIDTH / 2, 1 + SCREEN_HEIGHT / 2, (uint8_t [3]){ 255,0,0 });
+        draw_pixel (i + SCREEN_WIDTH / 2, -1 + SCREEN_HEIGHT / 2,
+                    (Colour){ 255,0,0,0 });
+        draw_pixel (i + SCREEN_WIDTH / 2, 0 + SCREEN_HEIGHT / 2,
+                    (Colour){ 255,0,0,0 });
+        draw_pixel (i + SCREEN_WIDTH / 2, 1 + SCREEN_HEIGHT / 2,
+                    (Colour){ 255,0,0,0 });
     }
 }
 

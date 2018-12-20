@@ -17,7 +17,7 @@ void rotate_on_axis (int x, int y, int angle, int *newx, int *newy) {
         newx = x, newy = y : rotation about z
         */
 
-    double rads = angle * M_PI / 180;
+    double rads = angle * M_PI / 360;
 
     *newx = (x * cos (rads)) - (y * sin (rads));
     *newy = (y * cos (rads)) + (x * sin (rads));

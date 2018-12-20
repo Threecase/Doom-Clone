@@ -3,66 +3,60 @@
  *
  */
 
-#ifndef _DRAWING_H
-#define _DRAWING_H
+#ifndef __DRAWING_H
+#define __DRAWING_H
 
-
-#ifndef __SDL
-
-#include <linux/fb.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
-
-#else
-#include <SDL2/SDL.h>
-#endif
+#include "data_types.h"
+#include "3D_manipulations.h"
+#include "error.h"
+#include "wad_info.h"
 
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include "dscreen.h"
-#include "data_types.h"
-#include "3D_manipulations.h"
-#include "drawing_2.h"
-#include "error.h"
-#include "wad_info.h"
+
+typedef struct Colour
+{   uint8_t r, g, b, a;
+} Colour;
+
+struct Screen
+{   Colour **pixels;
+    unsigned long width, height;
+} backbuffer;
+
+enum DRAWMODE
+{   DRAWMODE_2D,
+    DRAWMODE_3D,
+} DRAWMODE;
+
+enum DRAWFLAGS
+{
+    FLAG_FULLSCREEN = 0x01,
+};
 
 
-#define DRAW_MODE_3D    0
-#define DRAW_MODE_2D    1
 
-
-// VARIABLES
 // FIXME move these
 int angle;
 Point player_pos;
 
 
-char DRAW_MODE;
-
-char (*PALETTE)[3];
-
-struct Screen G_SCREEN;
-
-char G_VIDEO_INIT;
+Colour PALETTE[14][256];
 
 unsigned SCREEN_WIDTH, SCREEN_HEIGHT;
 
 
-// FUNCTIONS
+
 void render_ssector (SSector ssec);
 void render_ssector_2D (SSector ssec);
 
-void draw_render();
+void draw_frame(void);
+void draw_pixel(unsigned long x, unsigned long y, Colour c);
 
-void draw_pixel (uint8_t pixel[3], long x, long y);
-
-void init_video();
-
-void shutdown_video();
+void init_palette(void);
+void init_video (unsigned long w, unsigned long h, uint32_t flags);
+void shutdown_video(void);
 
 
 #endif
