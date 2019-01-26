@@ -7,8 +7,10 @@
 #include <stdlib.h>
 
 #include "texture.h"
-#include "read_wad.h"
+#include "data_types.h"
+#include "drawing.h"
 #include "input.h"
+#include "read_wad.h"
 
 
 

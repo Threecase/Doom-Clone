@@ -8,36 +8,47 @@
 
 #include "data_types.h"
 #include "3D_manipulations.h"
-#include "error.h"
 #include "wad_info.h"
 
 #include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
 
 
+/* Colour:
+ *  struct for colours
+ */
 typedef struct Colour
 {   uint8_t r, g, b, a;
 } Colour;
 
+/* Screen:
+ *  Screen stuff
+ */
 struct Screen
 {   Colour **pixels;
     unsigned long width, height;
 } backbuffer;
 
-enum DRAWMODE
+
+/* DRAWMODE:
+ *  Whether we're rendering in 3D
+ *  or 2D (ie for automap)
+ */
+enum
 {   DRAWMODE_2D,
     DRAWMODE_3D,
 } DRAWMODE;
 
-enum DRAWFLAGS
-{
-    FLAG_FULLSCREEN = 0x01,
-};
+/* DRAWFLAGS:
+ *  Flags for the renderer; like are
+ *  we drawing fullscreen or not
+ */
+enum
+{   FLAG_FULLSCREEN = 0x01,
+} DRAWFLAGS;
 
 
 
-// FIXME move these
+/* FIXME: move these */
 int angle;
 Point player_pos;
 
@@ -48,8 +59,8 @@ unsigned SCREEN_WIDTH, SCREEN_HEIGHT;
 
 
 
-void render_ssector (SSector ssec);
-void render_ssector_2D (SSector ssec);
+void render_ssector (SSector ssec, Level *level);
+void render_ssector_2D (SSector ssec, Level *level);
 
 void draw_frame(void);
 void draw_pixel(unsigned long x, unsigned long y, Colour c);

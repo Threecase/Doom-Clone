@@ -4,6 +4,7 @@
  */
 
 #include "../drawing.h"
+#include "../error.h"
 
 #include <SDL2/SDL.h>
 
@@ -19,8 +20,8 @@ void draw_pixel (unsigned long x, unsigned long y, Colour c)
 }
 
 
-SDL_Window   *window;
-SDL_Renderer *renderer;
+SDL_Window   *window = NULL;
+SDL_Renderer *renderer = NULL;
 
 
 

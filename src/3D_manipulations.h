@@ -9,12 +9,13 @@
 
 #include <math.h>
 
+/* TODO: move this */
 #define FOV 500     /* camera FOV */
 
 
 /* 3D (or 2D) points */
-typedef struct Point {
-    int x, y, z;
+typedef struct Point
+{   int x, y, z;
 } Point;
 
 

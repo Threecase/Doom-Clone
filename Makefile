@@ -16,14 +16,12 @@ OBJ=$(subst $(SRCDIR),$(OBJDIR),$(SRC:.c=.o)) $(OBJDIR)/$(GUI).o
 DEP=$(subst $(SRCDIR),$(DEPDIR),$(SRC:.c=.d))
 
 
-ifeq ($(GUI),SDL)
-  # SDL
+ifeq ($(GUI),SDL)	# SDL
   LDFLAGS += -lSDL2
 else
-  ifeq ($(GUI),fb)
-    # Framebuffer
-  else
-    # ???
+  ifeq ($(GUI),fb)	# Framebuffer
+    ;
+  else			# ???
     $(error "unknown GUI type")
   endif
 endif
@@ -38,11 +36,11 @@ include $(DEP)
 
 
 
-$(OBJDIR)/%.o:
+$(OBJDIR)/%.o : $(SRCDIR)/%.c
 	$(CC) -c $< $(CFLAGS) $(LDFLAGS) -o $@
 
 $(OBJDIR)/$(GUI).o : $(SRCDIR)/gui/$(GUI).c
-	$(CC) $^ -c $(CFLAGS) $(LDFLAGS) -o $@
+	$(CC) $< -c $(CFLAGS) $(LDFLAGS) -o $@
 
 
 $(DEPDIR)/%.d : $(SRCDIR)/%.c
@@ -51,5 +49,5 @@ $(DEPDIR)/%.d : $(SRCDIR)/%.c
 
 .PHONY: clean
 clean:
-	rm -f DOOM DOOM_fb $(OBJ) $(DEP)
+	@rm -f DOOM $(OBJ) $(DEP)
 

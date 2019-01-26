@@ -6,22 +6,34 @@
 
 #include "drawing_2.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 
 /* get_edge: get all the pixels along the line
-    x1/y1 to x2/y2 (ie left[] to right[])
-    (the values are stored in edge_table) */
+             x1/y1 to x2/y2 (ie left[] to right[])
+             (the values are stored in edge_table) */
 void get_edge (long left[2], long right[2], long edge_table[SCREEN_WIDTH][2])
 {
-
     /*  iterate down a Bresenham line,
-        add each point to the edge
-        */
+     *  add each point to the edge
+     */
 
-    int x, y;
-    int deltax = right[0] - left[0];
-    int deltay = right[1] - left[1];
-    int run1, rise1, run2, rise2;
-    int longest, shortest, numerator;
+    int x = 0,
+        y = 0;
+
+    int run1  = 0,
+        rise1 = 0,
+        run2  = 0,
+        rise2 = 0;
+
+    int longest   = 0,
+        shortest  = 0,
+        numerator = 0;
+
+    int deltax = right[0] - left[0],
+        deltay = right[1] - left[1];
+
 
     run1 = run2 = (deltax < 0)? -1 : 1;
     rise1 = (deltay < 0)? -1 : 1;
@@ -30,7 +42,8 @@ void get_edge (long left[2], long right[2], long edge_table[SCREEN_WIDTH][2])
     longest = abs (deltax);
     shortest = abs (deltay);
 
-    if (longest < shortest) {
+    if (longest < shortest)
+    {
         longest = abs (deltay);
         shortest = abs (deltax);
 
@@ -42,13 +55,14 @@ void get_edge (long left[2], long right[2], long edge_table[SCREEN_WIDTH][2])
     y = left[1];
 
     numerator = longest / 2;
-    for (int i = 0; i <= longest && i <= SCREEN_WIDTH; ++i) {
-    
+    for (int i = 0; i <= longest && i <= SCREEN_WIDTH; ++i)
+    {
         edge_table[i][0] = x;
         edge_table[i][1] = y;
 
         numerator += shortest;
-        if (numerator >= longest) {
+        if (numerator >= longest)
+        {
             numerator -= longest;
             x += run1;
             y += rise1;
@@ -65,8 +79,8 @@ void get_edge (long left[2], long right[2], long edge_table[SCREEN_WIDTH][2])
     1 - bottom left
     2 - top right
     3 - bottom right  */
-void sort_vertices (long coords[4][2]) {
-
+void sort_vertices (long coords[4][2])
+{
     /* sort the coords */
     for (int max = 4; max > 0; --max)
         for (int i = 1; i < max; ++i)
@@ -96,22 +110,22 @@ void fill_poly (long coords[4][2], Colour col)
         2 : right
         3 : bottom */
 
-    /* FIXME dynamic allocation for the edge length?
+    /* FIXME: dynamic allocation for the edge length?
         (or is it faster to just have a static size?) */
     long edges[4][SCREEN_WIDTH][2];
 
-    // left
+    /* left */
     get_edge (coords[0], coords[1], edges[0]);
-    // top
+    /* top */
     get_edge (coords[0], coords[2], edges[1]);
-    // right
+    /* right */
     get_edge (coords[2], coords[3], edges[2]);
-    // bottom
+    /* bottom */
     get_edge (coords[1], coords[3], edges[3]);
 
-    // draw the face
-    // TODO optimize (can take nearly 1% of a second!)
-    // TODO : add texturing
+    /* draw the face */
+    /* TODO: optimize (can take nearly 1% of a second!) */
+    /* TODO: add texturing */
     for (int j = 0; j < SCREEN_WIDTH && j <= abs (edges[0][0][0] - edges[2][0][0]); ++j)
     {   for (int y = edges[1][j][1]; y < SCREEN_HEIGHT && y <= edges[3][j][1]; ++y)
 //            draw_pixel (col, edges[3][j][0], y);

@@ -3,8 +3,8 @@
  *
  */
 
-#ifndef __RAWTERM_H
-#define __RAWTERM_H
+#ifndef __INPUT_H
+#define __INPUT_H
 
 
 

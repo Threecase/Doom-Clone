@@ -7,13 +7,12 @@
 #define _ERROR_H
 
 
-#include <stdio.h>
-#include <stdarg.h>
-
-#include "drawing.h"
+#define debug(msg, ...)    ({ DOOM_debug (__func__, msg, ##__VA_ARGS__); })
 
 
-void fatal_error (char *msg, ...);
+
+void DOOM_debug (char const *func, char const *msg, ...);
+void fatal_error (char const *msg, ...);
 
 
 #endif
