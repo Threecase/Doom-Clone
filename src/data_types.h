@@ -161,7 +161,7 @@ typedef struct
     char    top_tex[8 + 1],
             low_tex[8 + 1],
             mid_tex[8 + 1];
-    uint16_t sector_num;
+    uint16_t sector;
 } Sidedef;
 
 
@@ -247,7 +247,7 @@ typedef struct
 {
     uint16_t start, end;    /* start/end vertices */
     int16_t angle;          /* angle of the line */
-    uint16_t line;          /* linedef this is a seg of */
+    uint16_t linedef;       /* linedef this is a seg of */
     uint16_t direction;     /* left(0) or right(1) side of the linedef? */
     int16_t offset;         /* offset to start the seg at */
 } Seg;
@@ -320,6 +320,52 @@ typedef struct
                                 (goes east [+x], then up [-z])  */
     uint16_t *blocklists;   /* starts with 0, ends with -1 (empty is [0, -1]) */
 } BMap;
+
+
+
+/* Picture:
+ *  DOOM picture (sprite, texture, etc.)
+ *
+ *  Each picture is made up of 5 fields.
+ *   - width of the picture
+ *   - height of the picture
+ *   - left offset; the number of columns left of the origin
+ *   - top offset; the number of rows above the origin
+ *   - columns of pixel data
+ *
+ *  The pixel data columns are structured as such:
+ *   - 1 byte describing how many pixels to move down from top_offset
+ *   - 1 byte count of the number of non-transparent pixels in the column
+ *   - 1 byte which does nothing
+ *   - N bytes of colour indices
+ *   - 1 byte which does nothing
+ *
+ */
+typedef struct
+{
+    uint16_t width, height,
+             left_offset, top_offset;
+    int          *post_count;
+    struct Post **columns;              /* WIDTHxHEIGHT */
+} Picture;
+
+typedef struct Post
+{
+    uint8_t  top_offset;
+    uint8_t  pixel_count;
+    uint8_t *pixels;
+} Post;
+
+
+
+
+
+/* Point:
+ *  3D point
+ */
+typedef struct Point
+{   float x, y, z;
+} Point;
 
 
 #endif

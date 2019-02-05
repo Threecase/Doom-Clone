@@ -65,15 +65,15 @@ extern LumpInfo *LUMPS;
 
 
 
-void read_WAD (const char *wadname);
+void read_WAD (char *const wadname);
 
-int get_lump_from_level (const char *level, const char *lump);
-int get_lump_index (const char *lump_name);
+int get_lump_from_directory (char *const dir, char *const lump);
+int get_lump_index (char *const lump_name);
 
 int get_lump_size (int lump);
 
-void read_lump_index (int lump_index, void *output);
-void read_lump (const char *name, void *output);
+void *read_lump_index (int lump_index);
+void *read_lump (char *const name);
 
 
 #endif

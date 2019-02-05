@@ -1,0 +1,39 @@
+#!/bin/bash
+
+
+
+gui='OpenGL'
+prefix=
+
+for arg in "$@"; do
+    case "$arg" in
+    --prefix=*)
+      prefix=`echo $arg | sed 's/--prefix=//'`
+      ;;
+    --gui=*)
+      gui=`echo $arg | sed 's/--gui=//'`
+      gui_was_chosen=true
+      ;;
+
+    *)
+      echo 'usage: ./configure [OPTIONS]'
+      echo '--prefix=<path>     installation prefix'
+      echo '--gui=<type>        GUI type'
+      exit 0;;
+    esac
+done
+
+
+if [ -f Makefile ]; then
+    rm -f Makefile
+fi
+
+echo 'Generating Makefile...'
+echo "PREFIX=$prefix" >>Makefile
+
+echo "GUI=$gui"
+echo "GUI=$gui" >>Makefile
+cat Makefile.in >>Makefile
+
+echo 'Done.'
+

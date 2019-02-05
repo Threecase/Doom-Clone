@@ -14,7 +14,7 @@ LumpInfo *LUMPS = NULL;
 
 
 /* read_WAD: read a WAD file */
-void read_WAD (char const *wadname)
+void read_WAD (char *const wadname)
 {
     WadInfo wadheader = { 0 };
     int wad_fd = -1;
@@ -76,11 +76,11 @@ void read_WAD (char const *wadname)
     }
 }
 
-/* get_lump_index_from: return index of a lump,
- *                      starting from i = start */
-int get_lump_from_level (char const *level, char const *lump)
+/* get_lump_from_directory: return index of 'lump'
+ *                          in the directory 'dir' */
+int get_lump_from_directory (char *const dir, char *const lump)
 {
-    int start = get_lump_index (level) + 1;
+    int start = get_lump_index (dir) + 1;
 
     for (int i = start; i < NUM_LUMPS; ++i)
     {
@@ -93,7 +93,7 @@ int get_lump_from_level (char const *level, char const *lump)
 }
 
 /* get_lump_index: return index of a lump */
-int get_lump_index (char const *lump_name)
+int get_lump_index (char *const lump_name)
 {
     for (int i = NUM_LUMPS-1; i >= 0; --i)
     {
@@ -119,7 +119,7 @@ int get_lump_size (int lump)
 
 /* read_lump_index: read the data from the lump into output
  *                  (addressed by the lump's index) */
-void read_lump_index (int index, void *output)
+void *read_lump_index (int index)
 {
     if (index > NUM_LUMPS || index < 0)
     {   fatal_error ("Invalid lump index '%i'", index);
@@ -128,6 +128,8 @@ void read_lump_index (int index, void *output)
     LumpInfo lump = LUMPS[index];
     int bytes_read = 0;
 
+    void *output = malloc (LUMPS[index].size);
+
     lseek (lump.fd, lump.position, SEEK_SET);
     bytes_read = read (lump.fd, output, lump.size);
 
@@ -135,12 +137,14 @@ void read_lump_index (int index, void *output)
     {   fatal_error ("Only read %i bytes of lump '%s' (size %i)!",
                      bytes_read, lump.name, lump.size);
     }
+
+    return output;
 }
 
 /* read_lump: read data from the lump into output
  *            (addressed by the lump's name) */
-void read_lump (const char *name, void *output)
+void *read_lump (char *const name)
 {
-    read_lump_index (get_lump_index (name), output);
+    return read_lump_index (get_lump_index (name));
 }
 

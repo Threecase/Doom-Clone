@@ -10,93 +10,187 @@
 #include "BSP_tree.h"
 #include "input.h"
 #include "texture.h"
+#include "DOOM.h"
 
 #include <unistd.h>
-#include <SDL2/SDL.h>   /* FIXME: TEMP */
+#include <stdbool.h>
+#include <math.h>
 
 
-int const SPEED = 100,
-          ROTSP = 1;
+void draw_sidedef_texture_as_quad (Sidedef sd);/* FIXME: temp */
+
+
+
+Level level;
+int lvl_num = 1;
+
+/* FIXME: temp until I figure out how to do it better */
+bool mouse_moved_this_frame = false;
 
 
 
 /* DOOM clone */
 int main (int argc, char *argv[])
 {
-    /* defined in drawing.h (for now) */
-    extern Point player_pos;
-    player_pos.x = 0;
-    player_pos.y = 127;
-    player_pos.z = 0;
+    player.pos.x = 0;
+    player.pos.y = 0;
+    player.pos.z = 0;
+    player.angle     = 0;
 
-    /* defined in drawing.h (for now) */
-    extern int angle;
-    angle = 0;
+    player.speed     = 5;
+    player.rot_speed = 3;
+    player.mouse_sensitivity = 1.2;
 
-    DRAWMODE = DRAWMODE_3D;
+    game.drawmode  = DRAWMODE_3D;
+    game.map_scale = 1.0;
+    game.FOV       = 90;
+    game.map_scale_delta = 1.0;
 
-    /* FIXME : temp */
-    /* TODO: where is this defined? */
-    extern int poly_count;
-    poly_count = 0;
 
-    int c;
-    char quit = 0;
+    handle_arguments (argc, argv);
+    DOOM_init();
 
-    /* TODO: pull this out */
-    char *wadname = NULL;
-    int swidth, sheight;
-    swidth = sheight = 0;
-    uint32_t windowflags = 0;
+    DOOM_start (DOOM_update_and_render);
+
+    DOOM_exit (0);
+    return 0;
+}
+
+/* handle_arguments: handle command-line arguments */
+void handle_arguments (int argc, char *argv[])
+{
+    game.wadname = NULL;
+
+    game.window.width  = 800;
+    game.window.height = 600;
+    game.window.flags  =  0 ;
+
+
     /* argv handling */
     for (int i = 1; i < argc; ++i)
     {   /* wad to read */
         if (!strcmp (argv[i], "-w") && i+1 < argc)
         {
             int l = strlen (argv[++i]);
-            wadname = malloc (l);
-            memcpy (wadname, argv[i], l);
+            game.wadname = malloc (l);
+            memcpy (game.wadname, argv[i], l);
         }
         else if (!strcmp (argv[i], "-f"))
-        {   windowflags |= FLAG_FULLSCREEN;
+        {   game.window.flags |= FLAG_FULLSCREEN;
         }
         /* set resolution */
         else if (!strcmp (argv[i], "-r") && i+2 < argc)
         {
-            swidth = atoi (argv[++i]);
-            sheight = atoi (argv[++i]);
+            game.window.width  = atoi (argv[++i]);
+            game.window.height = atoi (argv[++i]);
         }
     }
-    if (wadname == NULL)
-    {   wadname = "doom.wad";
+    if (game.wadname == NULL)
+    {   game.wadname = "doom.wad";
     }
+}
 
-
+/* DOOM_init: initialize the game */
+void DOOM_init(void)
+{
     /* read the supplied WAD */
-    read_WAD (wadname);
+    read_WAD (game.wadname);
 
     /* initialize stuff */
-    init_video (swidth, sheight, windowflags);
+    init_texture_directories();
+    init_pnames();
+    init_video();
     init_input();
     init_palette();
 
 
-    int lvl_num = 1;
-    Level level = read_map_data (lvl_num);
+    lvl_num = 1;
+    level = read_map_data (lvl_num);
+}
+
+/* DOOM_start */
+void DOOM_start (void (*update_function)(int))
+{
+    update_function (0);
+    start_mainloop();
+}
+
+/* DOOM_update: do logic + ouput a frame */
+void DOOM_update_and_render (int n)
+{
+    /* run the game */
+#if 1
+    DOOM_get_input();
+    DOOM_update();
+    DOOM_render();
+    /* just render a texture (for testing) */
+#else
+    draw_frame();
+    draw_sidedef_texture_as_quad (level.sidedefs[0]);
+    draw_frame();
+#endif
+    call_in_1_60th_of_a_second (DOOM_update_and_render);
+}
+
+/* DOOM_update: do logic for 1 frame */
+void DOOM_update(void)
+{
+    player.pos.x += player.vector.x *  sin (RADS(player.angle));
+    player.pos.y += player.vector.x * -cos (RADS(player.angle));
+
+    player.pos.x += player.vector.y * cos (RADS(player.angle));
+    player.pos.y += player.vector.y * sin (RADS(player.angle));
 
 
+    player.pos.z += player.vector.z;
 
-    /* main loop */
-    while (!quit)
-    {   while ((c = input()))
+    player.angle += player.angle_vector;
+    player.angle = fmodf (player.angle, 360.f);
+
+    if (mouse_moved_this_frame)
+    {   player.angle_vector = 0;
+    }
+
+
+    game.map_scale *= game.map_scale_delta;
+
+
+#if 0
+    if (player.vector.x >= 10)      player.vector.x -= 10;
+    if (player.vector.y >= 10)      player.vector.y -= 10;
+    if (player.vector.z >= 10)      player.vector.z -= 10;
+
+    if (player.vector.x <= -10)     player.vector.x += 10;
+    if (player.vector.y <= -10)     player.vector.y += 10;
+    if (player.vector.z <= -10)     player.vector.z += 10;
+
+    if (abs (player.vector.x) <= 10)    player.vector.x = 0;
+    if (abs (player.vector.y) <= 10)    player.vector.y = 0;
+    if (abs (player.vector.z) <= 10)    player.vector.z = 0;
+#endif
+}
+
+/* DOOM_get_input: get user input */
+/* TODO: clean this up */
+void DOOM_get_input(void)
+{
+    mouse_moved_this_frame = false;
+
+    Event e = NULL_EVENT;
+    do
+    {
+        e = input();
+        switch (e.type)
         {
-            switch (c)
+        /* key pressed */
+        case EVENT_KEYPRESS:
+            switch (e.key)
             {
             /* FIXME : temp keybinds */
             /* quit */
             case 'q':
             case 'Q':
-                quit = 1;
+                DOOM_exit (0);
                 break;
             /* load next level */
             case 'm':
@@ -107,49 +201,125 @@ int main (int argc, char *argv[])
 
             /* toggle automap */
             case '\t':
-                DRAWMODE = DRAWMODE^1;
+                game.drawmode = game.drawmode^1;
                 break;
 
             /* Movement */
             /* forward */
             case 'w':
             case 'W':
-                player_pos.z += SPEED;
+                player.vector.y += player.speed;
                 break;
             /* backward */
             case 's':
             case 'S':
-                player_pos.z -= SPEED;
+                player.vector.y += -player.speed;
                 break;
 
             /* right move */
-            case 'D':
-                player_pos.x += SPEED;
-                break;
-            /* right rotate */
             case 'd':
-                angle = (angle - ROTSP) % 360;
+            case 'D':
+                player.vector.x += -player.speed;
+                break;
+            /* left move */
+            case 'a':
+            case 'A':
+                player.vector.x += player.speed;
                 break;
 
-            /* left move */
-            case 'A':
-                player_pos.x -= SPEED;
+            /* zoom in */
+            case 'z':
+            case 'Z':
+                game.map_scale_delta *= 1.1;
                 break;
-            /* left rotate */
-            case 'a':
-                angle = (angle + ROTSP) % 360;
+            /* zoom out */
+            case 'x':
+            case 'X':
+                game.map_scale_delta /= 1.1;
+                break;
+
+            /* go up */
+            case 'e':
+            case 'E':
+                player.vector.z = player.speed;
+                break;
+            /* go down */
+            case 'r':
+            case 'R':
+                player.vector.z = -player.speed;
                 break;
             }
-        }
+            break;
 
-        if (!quit)
-        {
-            render_tree (level.num_nodes - 1, &level);
-            draw_frame();
-//            raw_writes ("%i %i\n\r", player_pos.x, player_pos.z);
-        }
-    }
+        /* key released */
+        case EVENT_KEYRELEASE:
+            switch (e.key)
+            {
+            case 'w':
+            case 'W':
+                player.vector.y -= player.speed;
+                break;
+            case 's':
+            case 'S':
+                player.vector.y -= -player.speed;
+                break;
 
+            case 'd':
+            case 'D':
+                player.vector.x -= -player.speed;
+                break;
+            case 'a':
+            case 'A':
+                player.vector.x -= player.speed;
+                break;
+
+            case 'e':
+            case 'E':
+                player.vector.z -= player.speed;
+                break;
+            case 'r':
+            case 'R':
+                player.vector.z -= -player.speed;
+                break;
+
+            case 'z':
+            case 'Z':
+                game.map_scale_delta /= 1.1;
+                break;
+            case 'x':
+            case 'X':
+                game.map_scale_delta *= 1.1;
+                break;
+            }
+            break;
+
+        /* mouse motion */
+        case EVENT_MOUSEMOTION:
+            player.angle_vector = e.motion.dx * player.mouse_sensitivity;
+            mouse_moved_this_frame = true;
+            break;
+
+
+        case EVENT_NONE:
+            break;
+
+        default:
+            debug ("bad event type: %d", e.type);
+            break;
+        }
+    } while (e.type != EVENT_NONE);
+}
+
+/* DOOM_render: ouput a frame */
+void DOOM_render(void)
+{
+    render_tree (level.num_nodes - 1, &level);
+    draw_frame();
+}
+
+/* DOOM_exit: clean everything up and exit */
+void DOOM_exit (int status)
+{
     shutdown_video();
     shutdown_input();
 
@@ -164,14 +334,6 @@ int main (int argc, char *argv[])
     free (level.sectors);
     free (LUMPS);
 
-/*
-    free (pnames);
-    free (tex_data[0].offsets);
-    free (tex_data[0].texture);
-    free (tex_data[1].offsets);
-    free (tex_data[1].texture);
-    */
-
-    return 0;
+    exit (status);
 }
 

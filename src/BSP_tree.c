@@ -7,7 +7,7 @@
 #include "BSP_tree.h"
 #include "wad_info.h"
 #include "drawing.h"
-#include "3D_manipulations.h"
+#include "DOOM.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -25,18 +25,18 @@ void render_tree (int16_t n_num, Level *level)
         if (n_num == -1)
         {   n_num = 0;
         }
-        if (DRAWMODE == DRAWMODE_2D)
-        {   render_ssector_2D (level->ssectors[n_num & (~IS_SSECTOR)], level);
+        if (game.drawmode == DRAWMODE_2D)
+        {   render_ssector_2D (level, n_num & (~IS_SSECTOR));
         }
         else
-        {   render_ssector (level->ssectors[n_num & (~IS_SSECTOR)], level);
+        {   render_ssector (level, n_num & (~IS_SSECTOR));
         }
     }
     else
     {
         Node bsp_node = level->nodes[n_num];
 
-        bool i = test_line (bsp_node, player_pos.x, player_pos.y);
+        bool i = test_line (bsp_node, player.pos.x, player.pos.y);
         if (i == false)
         {
             render_tree (bsp_node.left_child, level);

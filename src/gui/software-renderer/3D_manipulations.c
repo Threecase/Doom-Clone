@@ -4,6 +4,9 @@
  */
 
 #include "3D_manipulations.h"
+#include "DOOM.h"
+
+#include <math.h>
 
 
 
@@ -40,8 +43,8 @@ int coords_3D_to_2D (Point p, Point cam, int angle,
     {   return 0;
     }
 
-    *x2D = (FOV * ax) / az;
-    *y2D = (FOV * (p.y - cam.y)) / az;
+    *x2D = (game.FOV * ax) / az;
+    *y2D = (game.FOV * (p.y - cam.y)) / az;
     return 1;
 }
 

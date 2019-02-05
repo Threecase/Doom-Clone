@@ -5,6 +5,7 @@
 
 #include "../drawing.h"
 #include "../error.h"
+#include "SDL_render-ssector.c"
 
 #include <SDL2/SDL.h>
 
@@ -26,7 +27,7 @@ SDL_Renderer *renderer = NULL;
 
 
 /* init_video: initialize SDL */
-void init_video (unsigned long w, unsigned long h, uint32_t flags)
+void init_video (int w, int h, uint32_t flags)
 {
     if (SDL_Init (SDL_INIT_VIDEO))
     {   fatal_error ("SDL_Init failed: %s", SDL_GetError());

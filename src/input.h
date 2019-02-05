@@ -8,10 +8,34 @@
 
 
 
+/* Event:
+ *  user input events, etc.
+ */
+typedef struct
+{
+    enum
+    {   EVENT_NONE,
+        EVENT_KEYPRESS,
+        EVENT_KEYRELEASE,
+        EVENT_MOUSEMOTION,
+    } type;
+
+    union
+    {   char key;
+        struct
+        {   int dx,
+                dy;
+        } motion;
+    };
+} Event;
+
+static Event const NULL_EVENT = { EVENT_NONE, { 0 } };
+
+
 void init_input(void);
 void shutdown_input(void);
 void print (char *format, ...);
-int input(void);
+Event input(void);
 
 
 #endif

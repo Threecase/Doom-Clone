@@ -1,5 +1,4 @@
 
-GUI=SDL
 
 CFLAGS=-Wall -Wextra -g
 LDFLAGS=-lm
@@ -16,13 +15,19 @@ OBJ=$(subst $(SRCDIR),$(OBJDIR),$(SRC:.c=.o)) $(OBJDIR)/$(GUI).o
 DEP=$(subst $(SRCDIR),$(DEPDIR),$(SRC:.c=.d))
 
 
-ifeq ($(GUI),SDL)	# SDL
+ifeq ($(GUI),SDL)		# SDL
   LDFLAGS += -lSDL2
 else
-  ifeq ($(GUI),fb)	# Framebuffer
+  ifeq ($(GUI),fb)		# Framebuffer
     ;
-  else			# ???
-    $(error "unknown GUI type")
+  else
+    ifeq ($(GUI),OpenGL)	# OpenGL
+      LDFLAGS += -lGL -lGLU -lglut -lGLEW
+
+
+    else			# ???
+      $(error "unknown GUI type")
+    endif
   endif
 endif
 

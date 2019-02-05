@@ -6,6 +6,7 @@
 
 #include "wad_info.h"
 #include "data_types.h"
+#include "DOOM.h"   /* FIXME: temp */
 
 
 /* byte sizes of each data type in the WAD */
@@ -42,41 +43,8 @@ Level read_map_data (int lvl_num)
 {
     Level level = { 0 };
 
-    void *data[10];
-    int   length[10];
-
-    char *lump_name[10] =
-      { "THINGS", "LINEDEFS", "SIDEDEFS", "VERTEXES", "SEGS",
-        "SSECTORS", "NODES", "SECTORS", "REJECT", "BLOCKMAP" };
-
-    int typesize[10] =
-     {  THING_SIZE, LINEDEF_SIZE, SIDEDEF_SIZE, VERTEX_SIZE,
-        SEG_SIZE, SSECTOR_SIZE, NODE_SIZE, SECTOR_SIZE,
-        REJECT_SIZE, BLOCKMAP_SIZE
-     };
-
     char lvl_name[5];
     sprintf (lvl_name, "E1M%i", lvl_num);
-
-    for (int n = 0; n < 10; ++n)  /* FIXME : read the REJECT and BLOCKMAP */
-    {
-        int idx = get_lump_from_level (lvl_name, lump_name[n]);
-
-        /* calculate the number of items in the lump */
-        int size = get_lump_size (idx);
-        length[n] = size / typesize[n];
-
-        if (length[n] != (float)size / (float)typesize[n])
-        {
-            fatal_error ("Bad size for %s lump in level %s -- %d/%d = %f",
-                   lump_name[n], lvl_name, size, typesize[n],
-                   (float)size / (float)typesize[n]);
-        }
-
-        /* read the data from each lump */
-        data[n] = malloc (size);
-        read_lump_index (idx, data[n]);
-    }
 
     level.num_things   = read_things   (lvl_name, &level.things);
     level.num_linedefs = read_linedefs (lvl_name, &level.linedefs);
@@ -94,7 +62,7 @@ Level read_map_data (int lvl_num)
 int generic_read (char lvl_name[5], char lump_name[9], uint8_t **data,
                   int data_size)
 {
-    int idx = get_lump_from_level (lvl_name, lump_name);
+    int idx = get_lump_from_directory (lvl_name, lump_name);
 
     /* calculate the number of items in the lump */
     int size = get_lump_size (idx);
@@ -108,8 +76,7 @@ int generic_read (char lvl_name[5], char lump_name[9], uint8_t **data,
     }
 
     /* read data from the lump */
-    (*data) = malloc (size);
-    read_lump_index (idx, *data);
+    *data = read_lump_index (idx);
 
     return length;
 }
@@ -132,6 +99,15 @@ int read_things (char lvl_name[5], Thing **data)
         (*data)[i].angle = *(uint16_t*)ptr;    ptr += 2;
         (*data)[i].type  = *(uint16_t*)ptr;    ptr += 2;
         (*data)[i].flags = *(uint16_t*)ptr;
+
+
+        if ((*data)[i].type == 1)   /* FIXME: temp (id 1 is player 1 spawn) */
+        {
+            player.pos.x = (*data)[i].x;
+            player.pos.y = (*data)[i].y;
+            player.angle = (*data)[i].angle;
+            debug ("starting @ (%f,%f), %f", player.pos.x, player.pos.y, player.angle);
+        }
     }
     return length;
 }
@@ -189,7 +165,7 @@ int read_sidedefs (char lvl_name[5], Sidedef **data)
         (*data)[i].mid_tex[8] = '\0';
         ptr += 8;
 
-        (*data)[i].sector_num = *(uint16_t*)ptr;
+        (*data)[i].sector = *(uint16_t*)ptr;
     }
     return length;
 }
@@ -228,7 +204,7 @@ int read_segs (char lvl_name[5], Seg **data)
         (*data)[i].end   = *(uint16_t*)ptr;     ptr += 2;
 
         (*data)[i].angle     = *(uint16_t*)ptr;     ptr += 2;
-        (*data)[i].line      = *(uint16_t*)ptr;     ptr += 2;
+        (*data)[i].linedef   = *(uint16_t*)ptr;     ptr += 2;
         (*data)[i].direction = *(uint16_t*)ptr;     ptr += 2;
 
         (*data)[i].offset    = *(int16_t*)ptr;
